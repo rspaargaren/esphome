@@ -1,0 +1,46 @@
+esphome:
+  name: nextion
+  platform: ESP8266
+  board: d1_mini
+
+wifi:
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Nextion Fallback Hotspot"
+    password: !secret esphome_ap_password
+
+captive_portal:
+
+# Enable logging
+logger:
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+  password: !secret esphome_api_password
+
+# Enable over-the-air updates
+ota:
+  password: !secret esphome_ota_password
+
+# Example configuration entry
+uart:
+  rx_pin: GPIO1
+  tx_pin: GPIO3
+  baud_rate: 9600
+
+
+display:
+  - platform: nextion
+    lambda: |-
+      it.set_component_value("gauge", 50);
+      it.set_component_text("textview", "Hello World!");
+
+switch:
+  - platform: nextion
+    page_id: 0
+    component_id: 3
+    name: "Nextion Component 3 Touch"
