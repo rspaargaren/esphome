@@ -9,7 +9,7 @@ DEPENDENCIES = ['display']
 
 CONF_NEXTION_ID = 'nextion_id'
 
-NextionSensor = nextion_ns.class_('NextionSensor', sensor.Sensor, uart.UARTDevice)
+NextionSensor = nextion_ns.class_('NextionSensor', sensor.Sensor)
 
 CONFIG_SCHEMA = sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 2).extend({
     cv.GenerateID(): cv.declare_id(NextionSensor),
@@ -17,12 +17,12 @@ CONFIG_SCHEMA = sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 2).extend({
     cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
     cv.Required(CONF_PAGE_ID): cv.uint8_t,
     cv.Required(CONF_COMPONENT_ID): cv.uint8_t,
-}).extend(uart.UART_DEVICE_SCHEMA)
+})
 
 def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     yield sensor.register_sensor(var, config)
-    yield uart.register_uart_device(var, config)
+
 
     hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     cg.add(hub.register_sensor_component(var))
