@@ -54,3 +54,11 @@ sensor:
     component_id: 5
     name: "Nextion sensor"
     button_id: "ht0"
+
+light:
+  - platform: nextion
+    page_id: 0
+    component_id: 5
+    name: "Nextion light test"
+    button_id: "ht0"
+

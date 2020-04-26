@@ -359,7 +359,18 @@ void NextionSensor::process(uint8_t page_id, uint8_t component_id, float state) 
   }
 }
 
+void NextionLightDummy::process(uint8_t page_id, uint8_t component_id, float brightness) {
+  if (this->page_id_ == page_id && this->component_id_ == component_id) {
+    //current_values_as_brightness(&bright);
+    ESP_LOGW(TAG, "Light state published");
+  }
+}
 
+void NextionLightDummy::write_state(light::LightState *state) {
+    float bright;
+    state->current_values_as_brightness(&bright);
+    //this->output_->set_level(bright);
+}
 
 }  // namespace nextion
 }  // namespace esphome
