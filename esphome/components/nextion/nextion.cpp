@@ -129,9 +129,11 @@ bool Nextion::read_until_ack_() {
     // this variable keeps track of ohow many of those have
     // been received
     uint8_t end_length = 0;
+    ESP_LOGD(TAG,"Received byte %x from Nextion", event);
     while (this->available() && end_length < 3 && data_length < sizeof(data)) {
       uint8_t byte;
       this->read_byte(&byte);
+      ESP_LOGD(TAG,"Received byte %x from Nextion", byte);
       if (byte == 0xFF) {
         end_length++;
       } else {
@@ -253,7 +255,7 @@ bool Nextion::read_until_ack_() {
         uint8_t page_id = data[0];
         uint8_t component_id = data[1];
         uint8_t touch_event = data[2];  // 0 -> release, 1 -> press
-        ESP_LOGD(TAG, "Got special state 0x91 page=%u component=%u type=%s", page_id, component_id, 
+        ESP_LOGD(TAG, "Got special state 0x91 page=%u component=%u type=%u", page_id, component_id, 
                  touch_event );
         for (auto *touch : this->sensortype_) {
           touch->process(page_id, component_id, touch_event);
