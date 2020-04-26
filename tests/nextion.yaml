@@ -53,5 +53,3 @@ sensor:
     page_id: 0
     component_id: 5
     name: "Nextion sensor"
-    button_id: "ht0"
-
