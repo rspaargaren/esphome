@@ -12,8 +12,6 @@ CONF_BUTTON_ID = 'button_id'
 
 NextionSwitch = nextion_ns.class_('NextionSwitch', switch.Switch, cg.Component, uart.UARTDevice)
 
-
-
 CONFIG_SCHEMA = switch.SWITCH_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(NextionSwitch),
 

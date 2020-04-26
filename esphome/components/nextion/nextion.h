@@ -437,16 +437,12 @@ class NextionSensor : public sensor::Sensor, public uart::UARTDevice {
  public:
   void set_page_id(uint8_t page_id) { page_id_ = page_id; }
   void set_component_id(uint8_t component_id) { component_id_ = component_id; }
-  void set_device_id(std::string device_id) {device_id_ = device_id; }
   void process(uint8_t page_id, uint8_t component_id, float state);
-  //void send_command_no_ack(const char *command);
-  //bool send_command_printf(const char *format, ...);
 
  protected:
   uint8_t page_id_;
   uint8_t component_id_;
-  std::string device_id_;
-  //void publish_state(float state) override;
+
 };
 
 
