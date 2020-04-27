@@ -136,6 +136,7 @@ void MAX7219Component::send64pixels (const byte chip, const byte pixels [8])
     {
     // start sending
     //digitalWrite (load_, LOW);
+    this->enable();
     // send extra NOPs to push the pixels out to extra displays
     for (byte i = 0; i < chip; i++)
       this->send_byte_ (MAX7219_REGISTER_NOOP, MAX7219_REGISTER_NOOP);
@@ -148,6 +149,7 @@ void MAX7219Component::send64pixels (const byte chip, const byte pixels [8])
     for (int i = 0; i < this->num_chips_ - chip - 1; i++)
       this->send_byte_ (MAX7219_REGISTER_NOOP, MAX7219_REGISTER_NOOP);
     // all done!
+    this->disable();
     //digitalWrite (load_, HIGH);
     }   // end of for each column
   }  // end of sendChar
