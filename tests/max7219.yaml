@@ -29,12 +29,12 @@ ota:
 # Example configuration entry
 
 spi:
-  clk_pin: D0
-  mosi_pin: D1
+  clk_pin: D5
+  mosi_pin: D7
 
 display:
   - platform: max7219digit
-    cs_pin: D2
+    cs_pin: D8
     num_chips: 4
     lambda: |-
       it.print("0123");

@@ -32,17 +32,17 @@ void MAX7219Component::setup() {
 
   // let's assume the user has all 8 digits connected, only important in daisy chained setups anyway
   this->send_to_all_(MAX7219_REGISTER_SCAN_LIMIT, 7);
-  
-  //this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, MAX7219_NO_SHUTDOWN);
-  //this->send_to_all_(MAX7219_REGISTER_DISPLAY_TEST, MAX7219_NO_DISPLAY_TEST);
-  
-  
   // let's use our own ASCII -> led pattern encoding
   this->send_to_all_(MAX7219_REGISTER_DECODE_MODE, 0);
-  this->send_to_all_(MAX7219_REGISTER_INTENSITY, this->intensity_);
+  // No display test with all the pixels on  
+  this->send_to_all_(MAX7219_REGISTER_DISPLAY_TEST, MAX7219_NO_DISPLAY_TEST);
+  // SET Intsity of display
+  //this->send_to_all_(MAX7219_REGISTER_INTENSITY, this->intensity_);
+  this->send_to_all_(MAX7219_REGISTER_INTENSITY, 15);
   this->display();
   // power up
   this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, 1);
+  ESP_LOGW(TAG,"MAX7219 SETUP STARTED");
 }
 void MAX7219Component::dump_config() {
   ESP_LOGCONFIG(TAG, "MAX7219:");
@@ -58,6 +58,7 @@ void MAX7219Component::display() {
     for (uint8_t j = 0; j < this->num_chips_; j++) {
       this->send_byte_(8 - i, this->buffer_[j * 8 + i]);
     }
+    ESP_LOGW(TAG,"Display Called");
     this->disable();
   }
 }
@@ -72,11 +73,12 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
   this->disable();
 }
 void MAX7219Component::update() {
+  ESP_LOGW(TAG,"UPDATE CALLED");
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)
     this->buffer_[i] = 0;
   if (this->writer_.has_value())
     (*this->writer_)(*this);
-  this->display();
+  //this->display();
 }
 //uint8_t MAX7219Component::print(uint8_t start_pos, const char *str) {
 //  uint8_t pos = start_pos;          // start positie
@@ -105,6 +107,8 @@ void MAX7219Component::update() {
 //}
 
 // write an entire null-terminated string to the LEDs
+uint8_t MAX7219Component::print(const char *str) { return this->print(0, str); }
+
 uint8_t MAX7219Component::print(uint8_t start_pos, const char *s)
 {
   byte chip;
@@ -115,7 +119,7 @@ uint8_t MAX7219Component::print(uint8_t start_pos, const char *s)
  // space out rest
   while (chip < (this->num_chips_))
     sendChar (chip++, ' ');
-
+return 0;
 }  // end of sendString
 
 
@@ -154,17 +158,6 @@ void MAX7219Component::send64pixels (const byte chip, const byte pixels [8])
     }   // end of for each column
   }  // end of sendChar
 
-
-
-
-
-
-
-
-
-
-
-uint8_t MAX7219Component::print(const char *str) { return this->print(0, str); }
 uint8_t MAX7219Component::printf(uint8_t pos, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
