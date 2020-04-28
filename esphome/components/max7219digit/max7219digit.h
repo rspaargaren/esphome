@@ -45,6 +45,8 @@ class MAX7219Component : public PollingComponent,
   /// Print `str` at position 0.
   uint8_t print(const char *str);
 
+  void sendSmooth (const char * s, const int pixel);
+
   void sendChar (const byte chip, const byte data);
   void send64pixels (const byte chip, const byte pixels [8]);
 
