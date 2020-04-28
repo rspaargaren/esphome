@@ -112,6 +112,8 @@ const uint8_t MAX7219_ASCII_TO_RAW[95] PROGMEM = {
     0b01100011,            // '~', ord 0x7E (degree symbol)
 };
 
+
+
 float MAX7219Component::get_setup_priority() const { return setup_priority::PROCESSOR; }
 void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219...");
