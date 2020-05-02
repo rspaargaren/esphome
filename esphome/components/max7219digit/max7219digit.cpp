@@ -157,6 +157,17 @@ void MAX7219Component::moveString (const char * s,const bool direction)
   
 }
 
+uint8_t MAX7219Component::moveStringf(const char *format, const bool direction, ...) {
+  va_list arg;
+  va_start(arg, format);
+  char buffer[64];
+  int ret = vsnprintf(buffer, sizeof(buffer), format, arg);
+  va_end(arg);
+  if (ret > 0)
+    this->moveString(buffer,direction);
+  return 0;
+}
+
 void MAX7219Component::sendSmooth (const char * s, const int pixel)
   {
   int len = strlen (s);       // set len for length of string
