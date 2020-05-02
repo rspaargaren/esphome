@@ -122,6 +122,41 @@ uint8_t MAX7219Component::print(uint8_t start_pos, const char *s)
 return 0;
 }  // end of sendString
 
+void MAX7219Component::moveString (const char * s,const bool direction)
+  {
+  if (s != this->string_buffer) {
+    if (direction) {
+    this-> string_pos = (strlen(s) - this->num_chips_)*8;
+    }
+    else
+    {
+     this-> string_pos = 0; 
+    }
+    
+    this-> string_buffer = s;
+    ESP_LOGW(TAG,"lengte van %s is %i",s,this->string_pos);
+  }
+  ESP_LOGW(TAG,"De positie is %i",this->string_pos);
+  this->sendSmooth(s,this->string_pos);
+  if (direction)
+  {
+    this->string_pos --;
+    if (this->string_pos==0)
+      {
+        this-> string_pos = (strlen(s) - this->num_chips_)*8;
+      }
+  }
+  else
+  {
+    this->string_pos ++;
+    if (this->string_pos==((strlen(s) - this->num_chips_)*8))
+    {
+      this->string_pos = 0;
+    }
+  }
+  
+}
+
 void MAX7219Component::sendSmooth (const char * s, const int pixel)
   {
   int len = strlen (s);       // set len for length of string
