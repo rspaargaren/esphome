@@ -37,5 +37,4 @@ display:
     cs_pin: D8
     num_chips: 4
     lambda: |-
-      it.moveString("123456",1);
-
+      it.sendSmooth("AB",4);

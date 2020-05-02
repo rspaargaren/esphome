@@ -45,6 +45,7 @@ class MAX7219Component : public PollingComponent,
   /// Print `str` at position 0.
   uint8_t print(const char *str);
 
+  void moveString (const char * s,const bool direction);
   void sendSmooth (const char * s, const int pixel);
 
   void sendChar (const byte chip, const byte data);
@@ -67,6 +68,8 @@ class MAX7219Component : public PollingComponent,
   uint8_t num_chips_{1};
   uint8_t *buffer_;
   optional<max7219_writer_t> writer_{};
+  int string_pos;
+  const char *string_buffer;
 };
 
 }  // namespace max7219
