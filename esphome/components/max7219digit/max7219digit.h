@@ -47,6 +47,7 @@ class MAX7219Component : public PollingComponent,
 
   void moveString (const char * s,const bool direction);
   void sendSmooth (const char * s, const int pixel);
+  uint8_t moveStringf(const char *format, const bool direction, ...) __attribute__((format(moveStringf, 3, 4)));
 
   void sendChar (const byte chip, const byte data);
   void send64pixels (const byte chip, const byte pixels [8]);
