@@ -112,10 +112,23 @@ uint8_t MAX7219Component::print(const char *str) { return this->print(0, str); }
 uint8_t MAX7219Component::print(uint8_t start_pos, const char *s)
 {
   byte chip;
-
+  this->offset_char = 0;
   for (chip = 0; chip < this->num_chips_ && *s; chip++)
-    sendChar (chip, *s++);
-
+  {
+    if (*s == 58){
+      this->offset_char = 1;
+      *s++;
+      chip--;
+      this->double_dots_right=true;
+    } else {
+      *s++;
+      if (*s == 58)
+        this->double_dots_left=true;
+      *s--;
+      sendChar (chip, *s++);
+    }
+    
+  }
  // space out rest
   while (chip < (this->num_chips_))
     sendChar (chip++, ' ');
@@ -214,9 +227,19 @@ void MAX7219Component::sendChar (const byte chip, const byte data)
   {
   // get this character from PROGMEM
   byte pixels [8];
-  for (byte i = 0; i < 8; i++)
-     pixels [i] = pgm_read_byte (&MAX7219_Dot_Matrix_font [data] [i]);
+  for (byte i = 0; i < this->offset_char; i++)
+     pixels[i]=0;
+  if (this->double_dots_right){
+     pixels[0]=0x66;
+     this->double_dots_right=false;
+  }
+  for (byte i = 0; i < 8-this->offset_char; i++)
+     pixels [i+this->offset_char] = pgm_read_byte (&MAX7219_Dot_Matrix_font [data] [i]);
 
+  if (this->double_dots_left){
+     pixels[7]=0x66;
+     this->double_dots_left=false;
+  }
   this->send64pixels (chip, pixels);
   }  // end of sendChar
 
@@ -232,7 +255,7 @@ void MAX7219Component::send64pixels (const byte chip, const byte pixels [8])
     byte b = 0;                         // rotate pixels 90 degrees -- set byte to 0
     for (byte i = 0; i < 8; i++)        //  run this loop 8 times for all the pixels[8] received
       b |= bitRead (pixels [i], col) << (7 - i);  // change the column bits into row bits
-    this->send_byte_(col + 1, b);       // send this byte to dispay at selected chip
+    this->send_byte_(col + 1 , b);       // send this byte to dispay at selected chip
     for (int i = 0; i < this->num_chips_ - chip - 1; i++) // end with enough NOPs so later chips don't update
       this->send_byte_ (MAX7219_REGISTER_NOOP, MAX7219_REGISTER_NOOP);
     this->disable();                    // all done disable SPI
