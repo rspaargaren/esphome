@@ -6,13 +6,13 @@ from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA, CONF_NUM_CHIPS
 DEPENDENCIES = ['spi']
 
 max7219_ns = cg.esphome_ns.namespace('max7219digit')
-MAX7219Component = max7219_ns.class_('MAX7219Component', cg.PollingComponent, spi.SPIDevice)
+MAX7219Component = max7219_ns.class_('MAX7219Component', cg.PollingComponent, spi.SPIDevice, display.DisplayBuffer)
 MAX7219ComponentRef = MAX7219Component.operator('ref')
 
 CONFIG_SCHEMA = display.BASIC_DISPLAY_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(MAX7219Component),
 
-    cv.Optional(CONF_NUM_CHIPS, default=1): cv.int_range(min=1, max=255),
+    cv.Optional(CONF_NUM_CHIPS, default=4): cv.int_range(min=1, max=255),
     cv.Optional(CONF_INTENSITY, default=15): cv.int_range(min=0, max=15),
 }).extend(cv.polling_component_schema('500ms')).extend(spi.SPI_DEVICE_SCHEMA)
 
