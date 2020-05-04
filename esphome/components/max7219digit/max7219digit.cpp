@@ -6,7 +6,7 @@
 namespace esphome {
 namespace max7219digit {
 
-static const char *TAG = "max7219";
+static const char *TAG = "max7219DIGIT";
 
 static const uint8_t MAX7219_REGISTER_NOOP = 0x00;
 static const uint8_t MAX7219_REGISTER_DECODE_MODE = 0x09;
@@ -24,9 +24,9 @@ constexpr uint8_t MAX7219_DISPLAY_TEST = 0x01;
 float MAX7219Component::get_setup_priority() const { return setup_priority::PROCESSOR; }
 
 void MAX7219Component::setup() {
-  ESP_LOGCONFIG(TAG, "Setting up MAX7219...");
+  ESP_LOGCONFIG(TAG, "Setting up MAX7219_DIGITS...");
   this->spi_setup();
-  this->buffer_ = new uint8_t[this->num_chips_ * 8];  // Create a buffer with chips*8 display positions
+  this->buffer_ = new uint8_t[this->num_chips_ * 8];  // Create a buffer with chips*64 display positions per chip
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)  // Clear buffer for startup
     this->buffer_[i] = 0;
 
@@ -42,27 +42,63 @@ void MAX7219Component::setup() {
   this->display();
   // power up
   this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, 1);
-  ESP_LOGW(TAG,"MAX7219 SETUP STARTED");
+  ESP_LOGD(TAG,"MAX7219 DIGIT SETUP STARTED");
 }
 void MAX7219Component::dump_config() {
-  ESP_LOGCONFIG(TAG, "MAX7219:");
+  ESP_LOGCONFIG(TAG, "MAX7219DIGIT:");
   ESP_LOGCONFIG(TAG, "  Number of Chips: %u", this->num_chips_);
   ESP_LOGCONFIG(TAG, "  Intensity: %u", this->intensity_);
   LOG_PIN("  CS Pin: ", this->cs_);
   LOG_UPDATE_INTERVAL(this);
 }
 
-void MAX7219Component::display() {
+void MAX7219Component::display2() {
   for (uint8_t i = 0; i < 8; i++) {                       //Run this loop 8 times
     this->enable();                                       //Pull CS high to enable SPI communication
     for (uint8_t j = 0; j < this->num_chips_; j++) {      //Run this routine for the number of chips
       this->send_byte_(8 - i, this->buffer_[j * 8 + i]);  //Send the byte from buffer (start at digit 8, buffer item [0]), buffer item [8]
     }                                                     //                                    digit 7, buffer item [1] , buffer item [9]
                                                           //                                    digit 1, buffer item [7] , buffer item [10]
-    ESP_LOGW(TAG,"Display Called");                       //Debug feedback for testing
+    ESP_LOGD(TAG,"Display Called");                       //Debug feedback for testing
     this->disable();                                      //Pull CS low to disable SPI communication
   }
 }
+
+void MAX7219Component::display() {
+byte pixels [8];
+  for (uint8_t i = 0; i < this->num_chips_; i++) {        //Run this loop for every MAX CHIP (GRID OF 64 leds)
+    for (uint8_t j = 0; j < 8; j++) {                     //Run this routine for the rows of every chip
+      pixels[j]=this->buffer_[i * 8 + j];
+    }                                                      //Send the byte from buffer (start at digit 8, buffer item [0]), buffer item [8]
+    this->send64pixels(i,pixels);                                                     //                                    digit 7, buffer item [1] , buffer item [9]
+                                                        //                                    digit 1, buffer item [7] , buffer item [10]
+                           //Debug feedback for testing                                      //Pull CS low to disable SPI communication
+  }
+  ESP_LOGD(TAG,"Display Called");
+}
+
+int MAX7219Component::get_height_internal(){
+  return 8;
+}
+
+int MAX7219Component::get_width_internal(){
+  return this->num_chips_*8;
+}
+
+void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color) {
+  if (x >= this->get_width_internal() || x < 0 || y >= this->get_height_internal() || y < 0)
+    return;
+
+  uint16_t pos = x ;//+ (y / 8) * this->get_width_internal();
+  uint8_t subpos = y ;//& 0x07;
+  if (color) {
+    this->buffer_[pos] |= (1 << subpos);
+  } else {
+    this->buffer_[pos] &= ~(1 << subpos);
+  }
+}
+
+
 void MAX7219Component::send_byte_(uint8_t a_register, uint8_t data) {
   this->write_byte(a_register);
   this->write_byte(data);
@@ -79,7 +115,7 @@ void MAX7219Component::update() {
     this->buffer_[i] = 0;                             //clear buffer on every position
   if (this->writer_.has_value())                      //inser Labda function if available
     (*this->writer_)(*this);                          
-  //this->display();                                  //call display to write buffer
+  this->display();                                  //call display to write buffer
 }
 //uint8_t MAX7219Component::print(uint8_t start_pos, const char *str) {
 //  uint8_t pos = start_pos;                    // start positie
@@ -107,9 +143,9 @@ void MAX7219Component::update() {
 //}
 
 // write an entire null-terminated string to the LEDs
-uint8_t MAX7219Component::print(const char *str) { return this->print(0, str); }
+uint8_t MAX7219Component::print2(const char *str) { return this->print2(0, str); }
 
-uint8_t MAX7219Component::print(uint8_t start_pos, const char *s)
+uint8_t MAX7219Component::print2(uint8_t start_pos, const char *s)
 {
   byte chip;
   this->offset_char = 0;
@@ -269,7 +305,7 @@ uint8_t MAX7219Component::printf(uint8_t pos, const char *format, ...) {
   int ret = vsnprintf(buffer, sizeof(buffer), format, arg);
   va_end(arg);
   if (ret > 0)
-    return this->print(pos, buffer);
+    return this->print2(pos, buffer);
   return 0;
 }
 uint8_t MAX7219Component::printf(const char *format, ...) {
@@ -279,7 +315,7 @@ uint8_t MAX7219Component::printf(const char *format, ...) {
   int ret = vsnprintf(buffer, sizeof(buffer), format, arg);
   va_end(arg);
   if (ret > 0)
-    return this->print(buffer);
+    return this->print2(buffer);
   return 0;
 }
 void MAX7219Component::set_writer(max7219_writer_t &&writer) { this->writer_ = writer; }
@@ -287,14 +323,14 @@ void MAX7219Component::set_intensity(uint8_t intensity) { this->intensity_ = int
 void MAX7219Component::set_num_chips(uint8_t num_chips) { this->num_chips_ = num_chips; }
 
 #ifdef USE_TIME
-uint8_t MAX7219Component::strftime(uint8_t pos, const char *format, time::ESPTime time) {
+uint8_t MAX7219Component::strftime2(uint8_t pos, const char *format, time::ESPTime time) {
   char buffer[64];
   size_t ret = time.strftime(buffer, sizeof(buffer), format);
   if (ret > 0)
-    return this->print(pos, buffer);
+    return this->print2(pos, buffer);
   return 0;
 }
-uint8_t MAX7219Component::strftime(const char *format, time::ESPTime time) { return this->strftime(0, format, time); }
+uint8_t MAX7219Component::strftime2(const char *format, time::ESPTime time) { return this->strftime2(0, format, time); }
 #endif
 
 }  // namespace max7219

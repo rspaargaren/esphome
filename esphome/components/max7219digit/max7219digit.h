@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
+#include "esphome/components/display/display_buffer.h"
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -17,6 +18,7 @@ class MAX7219Component;
 using max7219_writer_t = std::function<void(MAX7219Component &)>;
 
 class MAX7219Component : public PollingComponent,
+                         public display::DisplayBuffer,
                          public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW,
                                                spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_1MHZ> {
  public:
@@ -31,6 +33,12 @@ class MAX7219Component : public PollingComponent,
   float get_setup_priority() const override;
 
   void display();
+  void display2();
+
+  void draw_absolute_pixel_internal(int x, int y, int color) override;
+  int get_height_internal() override;
+  int get_width_internal() override;
+
 
   void set_intensity(uint8_t intensity);
   void set_num_chips(uint8_t num_chips);
@@ -41,9 +49,9 @@ class MAX7219Component : public PollingComponent,
   uint8_t printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
 
   /// Print `str` at the given position.
-  uint8_t print(uint8_t pos, const char *str);
+  uint8_t print2(uint8_t pos, const char *str);
   /// Print `str` at position 0.
-  uint8_t print(const char *str);
+  uint8_t print2(const char *str);
 
   void moveString (const char * s,const bool direction);
   void sendSmooth (const char * s, const int pixel);
@@ -55,10 +63,10 @@ class MAX7219Component : public PollingComponent,
 
 #ifdef USE_TIME
   /// Evaluate the strftime-format and print the result at the given position.
-  uint8_t strftime(uint8_t pos, const char *format, time::ESPTime time) __attribute__((format(strftime, 3, 0)));
+  uint8_t strftime2(uint8_t pos, const char *format, time::ESPTime time) __attribute__((format(strftime, 3, 0)));
 
   /// Evaluate the strftime-format and print the result at position 0.
-  uint8_t strftime(const char *format, time::ESPTime time) __attribute__((format(strftime, 2, 0)));
+  uint8_t strftime2(const char *format, time::ESPTime time) __attribute__((format(strftime, 2, 0)));
 #endif
 
  protected:

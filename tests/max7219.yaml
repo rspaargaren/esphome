@@ -36,6 +36,23 @@ display:
   - platform: max7219digit
     cs_pin: D8
     num_chips: 4
-    lambda: |-
-      it.print("02:20");
+    lambda: |-      
+      it.strftime(1, 0, id(digit_font), "%H:%M", id(hass_time).now());
+      it.image(24, 0, id(my_image));
+      it.line(1,7,21,7);
 
+font:
+  - file: "pixelmix.ttf"
+    id: digit_font
+    size: 6
+  - file: "pixelmix_bold.ttf"
+    id: digitbolt_font
+    size: 6
+
+time:
+  - platform: homeassistant
+    id: hass_time
+
+image:
+  - file: "smile.png"
+    id: my_image

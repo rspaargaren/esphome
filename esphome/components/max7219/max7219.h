@@ -27,7 +27,7 @@ class MAX7219Component : public PollingComponent,
   void dump_config() override;
 
   void update() override;
-
+  
   float get_setup_priority() const override;
 
   void display();
