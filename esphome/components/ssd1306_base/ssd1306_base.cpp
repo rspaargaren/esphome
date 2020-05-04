@@ -29,8 +29,8 @@ static const uint8_t SSD1306_COMMAND_PAGE_ADDRESS = 0x22;
 
 static const uint8_t SSD1306_NORMAL_DISPLAY = 0xA6;
 
-void SSD1306::setup() {
-  this->init_internal_(this->get_buffer_length_());
+void SSD1306::setup() {this->init_internal_(this->get_buffer_length_());
+  
 
   this->command(SSD1306_COMMAND_DISPLAY_OFF);
   this->command(SSD1306_COMMAND_SET_DISPLAY_CLOCK_DIV);

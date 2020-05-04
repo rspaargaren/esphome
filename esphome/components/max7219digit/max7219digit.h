@@ -68,7 +68,8 @@ class MAX7219Component : public PollingComponent,
   uint8_t intensity_{15};  /// Intensity of the display from 0 to 15 (most)
   uint8_t num_chips_{1};
   uint8_t offset_char=0;
-  uint8_t *buffer_;
+  //uint8_t *buffer_;
+  size_t get_buffer_length_();
   optional<max7219_writer_t> writer_{};
 };
 
