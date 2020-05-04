@@ -25,7 +25,8 @@ float MAX7219Component::get_setup_priority() const { return setup_priority::PROC
 void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219_DIGITS...");
   this->spi_setup();
-  this->buffer_ = new uint8_t[this->num_chips_ * 8];  // Create a buffer with chips*64 display positions per chip
+  //this->buffer_ = new uint8_t[this->num_chips_ * 8];  // Create a buffer with chips*64 display positions per chip
+  this->init_internal_(this->num_chips_ * 8);
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)  // Clear buffer for startup
     this->buffer_[i] = 0;
 
@@ -71,6 +72,10 @@ int MAX7219Component::get_width_internal(){
   return this->num_chips_*8;                              
 }
 
+size_t MAX7219Component::get_buffer_length_(){
+  return this->num_chips_*8;                              
+}
+
 void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color) {
   if (x >= this->get_width_internal() || x < 0 || y >= this->get_height_internal() || y < 0)    //If pixel is outside display then dont draw
     return;
@@ -94,7 +99,7 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
   this->disable();                                        // Disable SPI
 }
 void MAX7219Component::update() {
-  ESP_LOGW(TAG,"UPDATE CALLED");                      //Debug feedback for testing update is triggered by polling component
+  ESP_LOGD(TAG,"UPDATE CALLED");                      //Debug feedback for testing update is triggered by polling component
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)  //run this loop for chips*8 (all display positions)
     this->buffer_[i] = 0;                             //clear buffer on every position
   if (this->writer_.has_value())                      //inser Labda function if available
