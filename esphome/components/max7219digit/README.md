@@ -1,4 +1,17 @@
-Further update:
+
+```yaml
+display:
+  - platform: max7219digit
+    cs_pin: D8
+    num_chips: 4
+    offset: 2
+    intensity: 15
+    lambda: |-
+      it.strftime(0, 0, id(digit_font), "%H:%M%a", id(hass_time).now());
+      it.scroll_left(1);
+```
+offset = number of extra "virtual chips to be displayed with scroll"
+it.scroll_left(X): Move the content of display every update X steps to the left and add to end of the buffer to create a continuous loop.
 
 ```yaml
 display:
