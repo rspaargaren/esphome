@@ -83,7 +83,11 @@ void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color)
   uint16_t pos = x;                                       // X is starting at 0 top left
   uint8_t subpos = y;                                     // Y is starting at 0 top left
   if (color) {
-    this->buffer_[pos] |= (1 << subpos);
+    if (this->invert){
+      this->buffer_[pos] ^= (1 << subpos);
+    } else {
+      this->buffer_[pos] |= (1 << subpos);
+    }
   } else {
     this->buffer_[pos] &= ~(1 << subpos);                 // shift a bit to the correct position within the buffer data
   }
@@ -102,10 +106,29 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
 void MAX7219Component::update() {
   ESP_LOGD(TAG,"UPDATE CALLED");                                                   //Debug feedback for testing update is triggered by polling component
   for (uint8_t i = 0; i < this->get_buffer_length_(); i++)  //run this loop for chips*8 (all display positions)
-    this->buffer_[i] = 0;                             //clear buffer on every position
+    if (this->invert) {
+      this->buffer_[i] = 0xFF;
+    }
+    else
+    {
+      this->buffer_[i] = 0;
+    }
+                                 //clear buffer on every position
   if (this->writer_.has_value())                      //inser Labda function if available
     (*this->writer_)(*this);                         
   this->display();                                  //call display to write buffer
+}
+
+void MAX7219Component::invert_on_off(bool on_off){
+  this->invert = on_off;
+}
+
+void MAX7219Component::invert_on_off(){
+  if (this->invert){
+    this->invert = false;
+  } else {
+    this->invert = true;
+  }
 }
 
 void MAX7219Component::scroll_left (uint8_t stepsize){
