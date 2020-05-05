@@ -1,3 +1,31 @@
+```yaml
+display:
+  - platform: max7219digit
+    cs_pin: D8
+    num_chips: 4
+    lambda: |-
+      it.strftime(0, 0, id(digit_font), "%H:%M", id(hass_time).now());
+      it.image(24, 0, id(my_image));
+
+font:
+  - file: "pixelmix.ttf"
+    id: digit_font
+    size: 8
+  - file: "pixelmix_bold.ttf"
+    id: digitbolt_font
+    size: 6
+
+time:
+  - platform: homeassistant
+    id: hass_time
+
+image:
+  - file: "smile.png"
+    id: my_image
+```
+
+So if you want you can put 10 in a row. Just adjust the number of chips. But I want to give a parameter how they are stacked. As you can also place them on top of each other.
+
 
 ```yaml
 display:
