@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import display, spi
-from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA, CONF_NUM_CHIPS
+from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA, CONF_NUM_CHIPS, CONF_OFFSET
 
 DEPENDENCIES = ['spi']
 
@@ -14,6 +14,7 @@ CONFIG_SCHEMA = display.BASIC_DISPLAY_SCHEMA.extend({
 
     cv.Optional(CONF_NUM_CHIPS, default=4): cv.int_range(min=1, max=255),
     cv.Optional(CONF_INTENSITY, default=15): cv.int_range(min=0, max=15),
+    cv.Optional(CONF_OFFSET, default=0): cv.int_range(min=0, max=10),
 }).extend(cv.polling_component_schema('500ms')).extend(spi.SPI_DEVICE_SCHEMA)
 
 
@@ -25,6 +26,7 @@ def to_code(config):
 
     cg.add(var.set_num_chips(config[CONF_NUM_CHIPS]))
     cg.add(var.set_intensity(config[CONF_INTENSITY]))
+    cg.add(var.set_offset(config[CONF_OFFSET]))
 
     if CONF_LAMBDA in config:
         lambda_ = yield cg.process_lambda(config[CONF_LAMBDA], [(MAX7219ComponentRef, 'it')],

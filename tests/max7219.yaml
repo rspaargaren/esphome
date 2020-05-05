@@ -36,16 +36,19 @@ display:
   - platform: max7219digit
     cs_pin: D8
     num_chips: 4
+    offset: 2
+    intensity: 15
     lambda: |-      
       it.strftime(0, 0, id(digit_font), "%H:%M%a", id(hass_time).now());
+      it.scroll_left(1);
 
 font:
   - file: "pixelmix.ttf"
     id: digit_font
-    size: 6
+    size: 8
   - file: "pixelmix_bold.ttf"
     id: digitbolt_font
-    size: 6
+    size: 8
 
 time:
   - platform: homeassistant
