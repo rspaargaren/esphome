@@ -39,10 +39,7 @@ display:
     offset: 2
     intensity: 15
     lambda: |-      
-      it.strftime(0, 0, id(digit_font), "%H:%M%a", id(hass_time).now());
-      it.invert_on_off();
-      it.print(0, 0, id(digit_font),"  :  ");
-      it.invert_on_off();
+      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "Cost %.2f", 10.5);
 
 font:
   - file: "pixelmix.ttf"
