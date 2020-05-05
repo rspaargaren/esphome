@@ -1,3 +1,5 @@
+https://user-images.githubusercontent.com/10338724/81001535-2c491d00-8e48-11ea-86f2-2b0bb60eacb0.jpeg
+
 ```yaml
 display:
   - platform: max7219digit
