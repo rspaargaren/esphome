@@ -25,10 +25,11 @@ float MAX7219Component::get_setup_priority() const { return setup_priority::PROC
 void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219_DIGITS...");
   this->spi_setup();
-  //this->buffer_ = new uint8_t[this->num_chips_ * 8];  // Create a buffer with chips*64 display positions per chip
-  this->init_internal_(this->num_chips_ * 8);
-  for (uint8_t i = 0; i < this->num_chips_ * 8; i++)  // Clear buffer for startup
+  this->stepsleft=0;
+  this->init_internal_(this->get_buffer_length_());
+  for (uint8_t i = 0; i < this->get_buffer_length_(); i++){  // Clear buffer for startup
     this->buffer_[i] = 0;
+  }
 
   // let's assume the user has all 8 digits connected, only important in daisy chained setups anyway
   this->send_to_all_(MAX7219_REGISTER_SCAN_LIMIT, 7);
@@ -37,8 +38,8 @@ void MAX7219Component::setup() {
   // No display test with all the pixels on  
   this->send_to_all_(MAX7219_REGISTER_DISPLAY_TEST, MAX7219_NO_DISPLAY_TEST);
   // SET Intsity of display
-  //this->send_to_all_(MAX7219_REGISTER_INTENSITY, this->intensity_);
-  this->send_to_all_(MAX7219_REGISTER_INTENSITY, 1);
+  this->send_to_all_(MAX7219_REGISTER_INTENSITY, this->intensity_);
+  //this->send_to_all_(MAX7219_REGISTER_INTENSITY, 1);
   this->display();
   // power up
   this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, 1);
@@ -69,11 +70,11 @@ int MAX7219Component::get_height_internal(){
 }
 
 int MAX7219Component::get_width_internal(){
-  return this->num_chips_*8;                              
+  return (this->num_chips_+this->offset_chips)*8;                              
 }
 
 size_t MAX7219Component::get_buffer_length_(){
-  return this->num_chips_*8;                              
+  return (this->num_chips_+this->offset_chips)*8;                              
 }
 
 void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color) {
@@ -99,12 +100,29 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
   this->disable();                                        // Disable SPI
 }
 void MAX7219Component::update() {
-  ESP_LOGD(TAG,"UPDATE CALLED");                      //Debug feedback for testing update is triggered by polling component
-  for (uint8_t i = 0; i < this->num_chips_ * 8; i++)  //run this loop for chips*8 (all display positions)
+  ESP_LOGD(TAG,"UPDATE CALLED");                                                   //Debug feedback for testing update is triggered by polling component
+  for (uint8_t i = 0; i < this->get_buffer_length_(); i++)  //run this loop for chips*8 (all display positions)
     this->buffer_[i] = 0;                             //clear buffer on every position
   if (this->writer_.has_value())                      //inser Labda function if available
-    (*this->writer_)(*this);                          
+    (*this->writer_)(*this);                         
   this->display();                                  //call display to write buffer
+}
+
+void MAX7219Component::scroll_left (uint8_t stepsize){
+  uint8 NumSteps = stepsize + this -> stepsleft;
+  uint8 n = this->get_buffer_length_();
+  if (NumSteps==this->get_buffer_length_()) 
+    NumSteps = 0;
+  this->stepsleft = NumSteps;
+  ESP_LOGD(TAG,"NumSteps: %i",NumSteps);
+  for(uint8 j=1;j<NumSteps+1;j++){
+    byte temp = this->buffer_[0]; //remember first element
+    for(uint8 i=0;i<n-1;i++)
+    {
+      this->buffer_[i] = this->buffer_[i+1]; //move all element to the left except first one
+    }
+    this->buffer_[n-1] = temp; //assign remembered value to last element
+  }
 }
 
 void MAX7219Component::sendChar (const byte chip, const byte data)
@@ -173,6 +191,7 @@ uint8_t MAX7219Component::printdigitf(const char *format, ...) {
 void MAX7219Component::set_writer(max7219_writer_t &&writer) { this->writer_ = writer; }
 void MAX7219Component::set_intensity(uint8_t intensity) { this->intensity_ = intensity; }
 void MAX7219Component::set_num_chips(uint8_t num_chips) { this->num_chips_ = num_chips; }
+void MAX7219Component::set_offset(uint8_t offset) { this->offset_chips = offset; }
 
 #ifdef USE_TIME
 uint8_t MAX7219Component::strftimedigit(uint8_t pos, const char *format, time::ESPTime time) {
