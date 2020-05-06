@@ -36,6 +36,8 @@ class MAX7219Component : public PollingComponent,
   void invert_on_off(bool on_off);
   void invert_on_off();
 
+  void turn_on_off(bool on_off);
+
   void draw_absolute_pixel_internal(int x, int y, int color) override;
   int get_height_internal() override;
   int get_width_internal() override;
@@ -73,7 +75,8 @@ class MAX7219Component : public PollingComponent,
 
   uint8_t intensity_{15};  /// Intensity of the display from 0 to 15 (most)
   uint8_t num_chips_{1};
-  uint8_t offset_char=0;
+  //uint8_t offset_char=0;
+  uint8_t max_x=0;
   uint8_t offset_chips=0;
   bool invert=false;
   //uint8_t *buffer_;

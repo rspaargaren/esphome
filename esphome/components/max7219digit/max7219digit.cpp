@@ -49,6 +49,7 @@ void MAX7219Component::dump_config() {
   ESP_LOGCONFIG(TAG, "MAX7219DIGIT:");
   ESP_LOGCONFIG(TAG, "  Number of Chips: %u", this->num_chips_);
   ESP_LOGCONFIG(TAG, "  Intensity: %u", this->intensity_);
+  ESP_LOGCONFIG(TAG, "  Offset: %u", this->offset_chips);
   LOG_PIN("  CS Pin: ", this->cs_);
   LOG_UPDATE_INTERVAL(this);
 }
@@ -80,6 +81,7 @@ size_t MAX7219Component::get_buffer_length_(){
 void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color) {
   if (x >= this->get_width_internal() || x < 0 || y >= this->get_height_internal() || y < 0)    //If pixel is outside display then dont draw
     return;
+  if (x > this->max_x) this->max_x = x;                   // Set MAX X to be used in further function
   uint16_t pos = x;                                       // X is starting at 0 top left
   uint8_t subpos = y;                                     // Y is starting at 0 top left
   if (color) {
@@ -104,7 +106,8 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
   this->disable();                                        // Disable SPI
 }
 void MAX7219Component::update() {
-  ESP_LOGD(TAG,"UPDATE CALLED");                                                   //Debug feedback for testing update is triggered by polling component
+  ESP_LOGD(TAG,"UPDATE CALLED"); 
+  max_x=0;                                                  //Debug feedback for testing update is triggered by polling component
   for (uint8_t i = 0; i < this->get_buffer_length_(); i++)  //run this loop for chips*8 (all display positions)
     if (this->invert) {
       this->buffer_[i] = 0xFF;
@@ -131,10 +134,20 @@ void MAX7219Component::invert_on_off(){
   }
 }
 
+void MAX7219Component::turn_on_off(bool on_off){
+  if (on_off) {
+    this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, 1);
+  } else {
+    this->send_to_all_(MAX7219_REGISTER_SHUTDOWN, 0);
+  }
+}
+
 void MAX7219Component::scroll_left (uint8_t stepsize){
   uint8 NumSteps = stepsize + this -> stepsleft;
-  uint8 n = this->get_buffer_length_();
-  if (NumSteps==this->get_buffer_length_()) 
+  //uint8 n = this->get_buffer_length_();
+  //if (NumSteps==this->get_buffer_length_()) 
+  uint8 n = this->max_x;
+  if (NumSteps==this->max_x); 
     NumSteps = 0;
   this->stepsleft = NumSteps;
   ESP_LOGD(TAG,"NumSteps: %i",NumSteps);
@@ -151,12 +164,13 @@ void MAX7219Component::scroll_left (uint8_t stepsize){
 void MAX7219Component::sendChar (const byte chip, const byte data)
   {
   // get this character from PROGMEM
-  byte pixels [8];
-  for (byte i = 0; i < this->offset_char; i++)
-     pixels[i]=0;
-  for (byte i = 0; i < 8-this->offset_char; i++)
-     pixels [i+this->offset_char] = pgm_read_byte (&MAX7219_Dot_Matrix_font [data] [i]);
-  this->send64pixels (chip, pixels);
+  //byte pixels [8];
+  //for (byte i = 0; i < this->offset_char; i++)
+  //   pixels[i]=0;
+  for (byte i = 0; i < 8; i++)
+     this->buffer_[chip*8+i] = pgm_read_byte (&MAX7219_Dot_Matrix_font [data] [i]);
+     //pixels [i+this->offset_char] = pgm_read_byte (&MAX7219_Dot_Matrix_font [data] [i]);
+  //this->send64pixels (chip, pixels);
   }  // end of sendChar
 
 // send one character (data) to position (chip)
