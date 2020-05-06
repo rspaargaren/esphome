@@ -36,10 +36,11 @@ display:
   - platform: max7219digit
     cs_pin: D8
     num_chips: 4
-    offset: 2
+    offset: 10
     intensity: 15
     lambda: |-      
-      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "Cost %.2f", 10.5);
+      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "Cost high %.2f", 10.5);
+      it.scroll_left(1);
 
 font:
   - file: "pixelmix.ttf"

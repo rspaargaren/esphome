@@ -81,7 +81,8 @@ size_t MAX7219Component::get_buffer_length_(){
 void HOT MAX7219Component::draw_absolute_pixel_internal(int x, int y, int color) {
   if (x >= this->get_width_internal() || x < 0 || y >= this->get_height_internal() || y < 0)    //If pixel is outside display then dont draw
     return;
-  if (x > this->max_x) this->max_x = x;                   // Set MAX X to be used in further function
+  if (x > this->max_x) this->max_x = x;
+  //ESP_LOGD(TAG,"x %i and max x %i",x,this->max_x);                   // Set MAX X to be used in further function
   uint16_t pos = x;                                       // X is starting at 0 top left
   uint8_t subpos = y;                                     // Y is starting at 0 top left
   if (color) {
@@ -147,7 +148,8 @@ void MAX7219Component::scroll_left (uint8_t stepsize){
   //uint8 n = this->get_buffer_length_();
   //if (NumSteps==this->get_buffer_length_()) 
   uint8 n = this->max_x;
-  if (NumSteps==this->max_x); 
+  ESP_LOGD(TAG,"n: %i",n);
+  if (NumSteps==this->max_x) 
     NumSteps = 0;
   this->stepsleft = NumSteps;
   ESP_LOGD(TAG,"NumSteps: %i",NumSteps);
