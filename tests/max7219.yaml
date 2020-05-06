@@ -39,7 +39,8 @@ display:
     offset: 2
     intensity: 15
     lambda: |-      
-      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "Cost %.2f", 10.5);
+      it.printdigit(1,"hello");
+      it.turn_on_off(true);
 
 font:
   - file: "pixelmix.ttf"
