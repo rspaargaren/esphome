@@ -39,8 +39,8 @@ display:
     offset: 10
     intensity: 15
     lambda: |-      
-      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "Cost high %.2f", 10.5);
-      it.scroll_left(1);
+      it.printf(0, 0, id(digit_font),TextAlign::TOP_LEFT, "12345" );
+      it.scroll_left(3);
 
 font:
   - file: "pixelmix.ttf"
