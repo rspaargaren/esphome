@@ -148,9 +148,9 @@ void MAX7219Component::scroll_left (uint8_t stepsize){
   //uint8 n = this->get_buffer_length_();
   //if (NumSteps==this->get_buffer_length_()) 
   if (this->max_x < this->num_chips_*8) this->max_x = this->num_chips_*8;
-  uint8 n = this->max_x+2;
+  uint8 n = this->max_x+3;
   ESP_LOGD(TAG,"n: %i",n);
-  if (NumSteps >= this->max_x+2) 
+  if (NumSteps >= this->max_x+3) 
     NumSteps = 0;
   this->stepsleft = NumSteps;
   ESP_LOGD(TAG,"NumSteps: %i",NumSteps);
