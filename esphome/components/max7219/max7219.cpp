@@ -118,9 +118,10 @@ void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219...");
   this->spi_setup();
   this->buffer_ = new uint8_t[this->num_chips_ * 8];
-  for (uint8_t i = 0; i < this->num_chips_ * 8; i++)
+  for (uint8_t i = 0; i < this->num_chips_ * 8; i++){
     this->buffer_[i] = 0;
-
+    this->string_buffer_.push_back(0);
+  }
   // let's assume the user has all 8 digits connected, only important in daisy chained setups anyway
   this->send_to_all_(MAX7219_REGISTER_SCAN_LIMIT, 7);
   // let's use our own ASCII -> led pattern encoding
@@ -143,11 +144,28 @@ void MAX7219Component::display() {
   for (uint8_t i = 0; i < 8; i++) {
     this->enable();
     for (uint8_t j = 0; j < this->num_chips_; j++) {
-      this->send_byte_(8 - i, this->buffer_[j * 8 + i]);
+       this->send_byte_(8 - i, this->string_buffer_[j * 8 + i]);
+       ESP_LOGW(TAG, "Writing character %i", this->string_buffer_[i]);
     }
     this->disable();
   }
 }
+
+void MAX7219Component::scroll_left(){
+  uint8_t temp = 0;
+  if (this->pos_left_ >= this->string_buffer_.size())
+    this->pos_left_ = 0;  // Reset the counter back to 0 when full string has been displayed.
+  for (uint8_t i = 0; i < this->pos_left_; i++){
+    this->string_buffer_.push_back(this->string_buffer_.front()); 
+    this->string_buffer_.erase(this->string_buffer_.begin());
+    ESP_LOGW(TAG, "DATA IN VECTOR BEGIN %i", this->string_buffer_.front());
+    ESP_LOGW(TAG, "DATA IN VECTOR END %i", this->string_buffer_.back());
+  }
+  this->pos_left_++;
+  ESP_LOGW(TAG, "pos_left= %i",this->pos_left_);
+}
+
+
 void MAX7219Component::send_byte_(uint8_t a_register, uint8_t data) {
   this->write_byte(a_register);
   this->write_byte(data);
@@ -159,15 +177,18 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
   this->disable();
 }
 void MAX7219Component::update() {
+  this->string_buffer_.clear();
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)
     this->buffer_[i] = 0;
   if (this->writer_.has_value())
     (*this->writer_)(*this);
+  //  scroll_left();
   this->display();
 }
 uint8_t MAX7219Component::print(uint8_t start_pos, const char *str) {
   uint8_t pos = start_pos;
   for (; *str != '\0'; str++) {
+    ESP_LOGW(TAG, "Encountered character '%c'", *str);
     uint8_t data = MAX7219_UNKNOWN_CHAR;
     if (*str >= ' ' && *str <= '~')
       data = pgm_read_byte(&MAX7219_ASCII_TO_RAW[*str - ' ']);
@@ -178,13 +199,15 @@ uint8_t MAX7219Component::print(uint8_t start_pos, const char *str) {
     if (*str == '.') {
       if (pos != start_pos)
         pos--;
-      this->buffer_[pos] |= 0b10000000;
+      this->buffer_[pos] |= 0b10000000;  // To be changed!!!
     } else {
-      if (pos >= this->num_chips_ * 8) {
-        ESP_LOGE(TAG, "MAX7219 String is too long for the display!");
-        break;
-      }
-      this->buffer_[pos] = data;
+      //if (pos >= this->num_chips_ * 8) {
+      //  ESP_LOGE(TAG, "MAX7219 String is too long for the display!");
+      //  break;
+      //}
+      // this->buffer_[pos] = data;
+      this->string_buffer_.push_back(data);
+      // ESP_LOGW(TAG, "DATA WRITTEN IN VECTOR %i", this->string_buffer_.back());
     }
     pos++;
   }

@@ -1,0 +1,45 @@
+esphome:
+  name: nextion
+  platform: ESP32
+  board: nodemcu-32s
+
+wifi:
+  ssid: !secret wifi_not_ssid
+  password: !secret wifi_not_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Nextion Fallback Hotspot"
+    password: !secret esphome_ap_password
+
+captive_portal:
+
+# Enable logging
+logger:
+  baud_rate: 115200
+  level: DEBUG
+# Enable Home Assistant API
+api:
+  password: !secret esphome_api_password
+
+# Enable over-the-air updates
+ota:
+  password: !secret esphome_ota_password
+
+# Example configuration entry
+
+spi:
+  clk_pin: GPIO14
+#D5
+
+  mosi_pin: GPIO13 
+#D7
+
+display:
+  - platform: max7219
+    cs_pin: GPIO15
+    num_chips: 1
+    intensity: 15
+    lambda: |-      
+      it.print("012345678987654321");
+      it.scroll_left();
