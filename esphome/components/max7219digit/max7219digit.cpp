@@ -118,6 +118,21 @@ void MAX7219Component::update() {
   this->display();  // call display to write buffer
 }
 
+void MAX7219Component::image_loop(int x, int y, Image *image, Image *image2, Image *image3 ) {
+if (this->imageloop_ == 0) {
+  //this->image(0,0,image1);
+  this->imageloop_ = 1;
+} else if (this->imageloop_ == 1) {
+  //this->image(0,0,image2);
+  this->imageloop_ = 2;
+} else {
+  //this->image(0,0,image3);
+  this->imageloop_ = 0;
+}
+}
+
+
+
 void MAX7219Component::invert_on_off(bool on_off) { this->invert_ = on_off; }
 
 void MAX7219Component::invert_on_off() {

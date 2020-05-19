@@ -18,6 +18,7 @@ using max7219_writer_t = std::function<void(MAX7219Component &)>;
 
 class MAX7219Component : public PollingComponent,
                          public display::DisplayBuffer,
+                         public display::Image,
                          public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST, spi::CLOCK_POLARITY_LOW,
                                                spi::CLOCK_PHASE_LEADING, spi::DATA_RATE_1MHZ> {
  public:
@@ -28,6 +29,8 @@ class MAX7219Component : public PollingComponent,
   void dump_config() override;
 
   void update() override;
+
+  void image_loop(int x, int y, Image *image1, Image *image2, Image *image3 );
 
   float get_setup_priority() const override;
 
@@ -78,6 +81,7 @@ class MAX7219Component : public PollingComponent,
   // uint8_t offset_char = 0;
   uint8_t max_x_ = 0;
   uint8_t offset_chips_ = 0;
+  uint8_t imageloop_ = 0;
   bool invert_ = false;
   // uint8_t *buffer_;
   // uint8_t *bufferold_{nullptr};
