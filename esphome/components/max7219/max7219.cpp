@@ -118,9 +118,7 @@ void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219...");
   this->string_buffer_.reserve(100);
   this->spi_setup();
-  // this->buffer_ = new uint8_t[this->num_chips_ * 8];
-  for (uint8_t i = 0; i < this->num_chips_ * 8; i++){
-    // this->buffer_[i] = 0;
+  for (uint8_t i = 0; i < this->num_chips_ * 8; i++) {
     this->string_buffer_.push_back(0);
   }
   // let's assume the user has all 8 digits connected, only important in daisy chained setups anyway
@@ -145,27 +143,22 @@ void MAX7219Component::display() {
   for (uint8_t i = 0; i < 8; i++) {
     this->enable();
     for (uint8_t j = 0; j < this->num_chips_; j++) {
-       this->send_byte_(8 - i, this->string_buffer_[j * 8 + i]);
-       ESP_LOGW(TAG, "Writing character %i", this->string_buffer_[i]);
+      this->send_byte_(8 - i, this->string_buffer_[j * 8 + i]);
     }
     this->disable();
   }
 }
 
-void MAX7219Component::scroll_left(){
+void MAX7219Component::scroll_left() {
   uint8_t temp = 0;
   if (this->pos_left_ >= this->string_buffer_.size())
     this->pos_left_ = 0;  // Reset the counter back to 0 when full string has been displayed.
-  for (uint8_t i = 0; i < this->pos_left_; i++){
-    this->string_buffer_.push_back(this->string_buffer_.front()); 
+  for (uint8_t i = 0; i < this->pos_left_; i++) {
+    this->string_buffer_.push_back(this->string_buffer_.front());
     this->string_buffer_.erase(this->string_buffer_.begin());
-    // ESP_LOGW(TAG, "DATA IN VECTOR BEGIN %i", this->string_buffer_.front());
-    // ESP_LOGW(TAG, "DATA IN VECTOR END %i", this->string_buffer_.back());
   }
   this->pos_left_++;
-  // ESP_LOGW(TAG, "pos_left= %i",this->pos_left_);
 }
-
 
 void MAX7219Component::send_byte_(uint8_t a_register, uint8_t data) {
   this->write_byte(a_register);
