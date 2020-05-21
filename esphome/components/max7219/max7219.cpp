@@ -116,10 +116,11 @@ const uint8_t MAX7219_ASCII_TO_RAW[95] PROGMEM = {
 float MAX7219Component::get_setup_priority() const { return setup_priority::PROCESSOR; }
 void MAX7219Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up MAX7219...");
+  this->string_buffer_.reserve(100);
   this->spi_setup();
-  this->buffer_ = new uint8_t[this->num_chips_ * 8];
+  // this->buffer_ = new uint8_t[this->num_chips_ * 8];
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++){
-    this->buffer_[i] = 0;
+    // this->buffer_[i] = 0;
     this->string_buffer_.push_back(0);
   }
   // let's assume the user has all 8 digits connected, only important in daisy chained setups anyway
@@ -158,11 +159,11 @@ void MAX7219Component::scroll_left(){
   for (uint8_t i = 0; i < this->pos_left_; i++){
     this->string_buffer_.push_back(this->string_buffer_.front()); 
     this->string_buffer_.erase(this->string_buffer_.begin());
-    ESP_LOGW(TAG, "DATA IN VECTOR BEGIN %i", this->string_buffer_.front());
-    ESP_LOGW(TAG, "DATA IN VECTOR END %i", this->string_buffer_.back());
+    // ESP_LOGW(TAG, "DATA IN VECTOR BEGIN %i", this->string_buffer_.front());
+    // ESP_LOGW(TAG, "DATA IN VECTOR END %i", this->string_buffer_.back());
   }
   this->pos_left_++;
-  ESP_LOGW(TAG, "pos_left= %i",this->pos_left_);
+  // ESP_LOGW(TAG, "pos_left= %i",this->pos_left_);
 }
 
 
@@ -179,7 +180,8 @@ void MAX7219Component::send_to_all_(uint8_t a_register, uint8_t data) {
 void MAX7219Component::update() {
   this->string_buffer_.clear();
   for (uint8_t i = 0; i < this->num_chips_ * 8; i++)
-    this->buffer_[i] = 0;
+    // this->buffer_[i] = 0;
+    this->string_buffer_.push_back(0);
   if (this->writer_.has_value())
     (*this->writer_)(*this);
   //  scroll_left();
@@ -199,15 +201,13 @@ uint8_t MAX7219Component::print(uint8_t start_pos, const char *str) {
     if (*str == '.') {
       if (pos != start_pos)
         pos--;
-      this->buffer_[pos] |= 0b10000000;  // To be changed!!!
+      this->string_buffer_[pos] |= 0b10000000;
     } else {
-      //if (pos >= this->num_chips_ * 8) {
-      //  ESP_LOGE(TAG, "MAX7219 String is too long for the display!");
-      //  break;
-      //}
-      // this->buffer_[pos] = data;
-      this->string_buffer_.push_back(data);
-      // ESP_LOGW(TAG, "DATA WRITTEN IN VECTOR %i", this->string_buffer_.back());
+      if (pos <= num_chips_ * 8) {
+        this->string_buffer_[pos] |= data;
+      } else {
+        this->string_buffer_.push_back(data);
+      }
     }
     pos++;
   }
