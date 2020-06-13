@@ -64,7 +64,6 @@ display:
      rotate_chip: 0
      intensity: 10
      scroll_mode: 'STOP'
-#    update_interval: 75ms
      id: my_matrix
      lambda: |-
        if (id(my_global_int) == 0) {
