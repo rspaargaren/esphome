@@ -14,6 +14,8 @@ esphome:
 substitutions:
   devicename: test3
   devicecomment: test3 device
+  min_sub: "0.03"
+  max_sub: "12.0%"
 
 api:
   port: 8000
@@ -183,9 +185,13 @@ spi:
   miso_pin: GPIO14
 
 uart:
-  tx_pin: GPIO1
-  rx_pin: GPIO3
-  baud_rate: 115200
+  - tx_pin: GPIO1
+    rx_pin: GPIO3
+    baud_rate: 115200
+
+  - id: adalight_uart
+    rx_pin: GPIO3
+    baud_rate: 115200
 
 ota:
   safe_mode: True
@@ -197,10 +203,15 @@ logger:
   esp8266_store_log_strings_in_flash: false
 
 web_server:
+  prometheus: true
 
 deep_sleep:
   run_duration: 20s
   sleep_duration: 50s
+
+wled:
+
+adalight:
 
 sensor:
   - platform: apds9960
@@ -360,6 +371,9 @@ sensor:
       name: "PM2.5"
     pm_10_0:
       name: "PM10.0"
+    aqi:
+      name: "AQI"
+      calculation_type: "AQI"
   - platform: pmsx003
     type: PMSX003
     pm_1_0:
@@ -603,6 +617,49 @@ climate:
       - switch.turn_on: gpio_switch2
     heat_action:
       - switch.turn_on: gpio_switch1
+    dry_action:
+      - switch.turn_on: gpio_switch2
+    fan_only_action:
+      - switch.turn_on: gpio_switch1
+    auto_mode:
+      - switch.turn_on: gpio_switch2
+    off_mode:
+      - switch.turn_on: gpio_switch1
+    heat_mode:
+      - switch.turn_on: gpio_switch2
+    cool_mode:
+      - switch.turn_on: gpio_switch1
+    dry_mode:
+      - switch.turn_on: gpio_switch2
+    fan_only_mode:
+      - switch.turn_on: gpio_switch1
+    fan_mode_auto_action:
+      - switch.turn_on: gpio_switch2
+    fan_mode_on_action:
+      - switch.turn_on: gpio_switch1
+    fan_mode_off_action:
+      - switch.turn_on: gpio_switch2
+    fan_mode_low_action:
+      - switch.turn_on: gpio_switch1
+    fan_mode_medium_action:
+      - switch.turn_on: gpio_switch2
+    fan_mode_high_action:
+      - switch.turn_on: gpio_switch1
+    fan_mode_middle_action:
+      - switch.turn_on: gpio_switch2
+    fan_mode_focus_action:
+      - switch.turn_on: gpio_switch1
+    fan_mode_diffuse_action:
+      - switch.turn_on: gpio_switch2
+    swing_off_action:
+      - switch.turn_on: gpio_switch1
+    swing_horizontal_action:
+      - switch.turn_on: gpio_switch2
+    swing_vertical_action:
+      - switch.turn_on: gpio_switch1
+    swing_both_action:
+      - switch.turn_on: gpio_switch2
+    hysteresis: 0.2
     away_config:
       default_target_temperature_low: 16°C
       default_target_temperature_high: 20°C
@@ -693,6 +750,8 @@ mcp23017:
 mcp23008:
   id: mcp23008_hub
 
+e131:
+
 light:
   - platform: neopixelbus
     name: Neopixelbus Light
@@ -701,11 +760,19 @@ light:
     variant: SK6812
     method: ESP8266_UART0
     num_leds: 100
+    effects:
+      - wled:
+      - adalight:
+          uart_id: adalight_uart
+      - e131:
+          universe: 1
 
 servo:
   id: my_servo
   output: out
   restore: true
+  min_level: $min_sub
+  max_level: $max_sub
 
 ttp229_lsf:
 
