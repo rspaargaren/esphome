@@ -7,7 +7,7 @@ from . import nextion_ns
 
 DEPENDENCIES = ["uart", "network"]
 AUTO_LOAD = ["binary_sensor"]
-CONF_HTTPREQUEST_ID = "http_request_id"
+CONF_HTTP_REQUEST_ID = "http_request_id"
 CONF_FIRMWARE_URL = "firmware_url"
 
 Nextion = nextion_ns.class_("Nextion", cg.PollingComponent, uart.UARTDevice)
@@ -17,7 +17,7 @@ CONFIG_SCHEMA = (
     display.BASIC_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(Nextion),
-            cv.Optional(CONF_HTTPREQUEST_ID): cv.use_id(HttpRequestComponent),
+            cv.Optional(CONF_HTTP_REQUEST_ID): cv.use_id(HttpRequestComponent),
             cv.Optional(CONF_FIRMWARE_URL, default=""): cv.string,
             cv.Optional(CONF_BRIGHTNESS, default=1.0): cv.percentage,
         }
@@ -29,7 +29,7 @@ CONFIG_SCHEMA = (
 
 def validate_firmware_section(config):
     url_ = config[CONF_FIRMWARE_URL]
-    if config.get(CONF_HTTPREQUEST_ID) and url_.len() == 0:
+    if config.get(CONF_HTTP_REQUEST_ID) and url_.len() == 0:
         raise cv.Invalid("Firmware URL is empty")
     return config
 
@@ -47,8 +47,8 @@ def to_code(config):
         )
         cg.add(var.set_writer(lambda_))
 
-    if CONF_HTTPREQUEST_ID in config:
-        httprequest_pointer = yield cg.get_variable(config[CONF_HTTPREQUEST_ID])
+    if CONF_HTTP_REQUEST_ID in config:
+        httprequest_pointer = yield cg.get_variable(config[CONF_HTTP_REQUEST_ID])
         cg.add(var.set_httprequest(httprequest_pointer))
         cg.add(var.set_firmware_url(config[CONF_FIRMWARE_URL]))
 
