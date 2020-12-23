@@ -36,6 +36,7 @@ class HttpRequestComponent : public Component {
   void send();
   void close();
   const char *get_string();
+  HTTPClient *get_httpclient() { return &client_; }
 
  protected:
   HTTPClient client_{};
