@@ -1,4 +1,5 @@
 #include "nextion.h"
+#include "esphome/core/util.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -246,7 +247,7 @@ bool Nextion::read_until_ack_() {
   return false;
 }
 void Nextion::loop() {
-  while (this->available() >= 4) {
+  while (this->available() >= 4 && !this->is_updating_) {
     this->read_until_ack_();
   }
 }
@@ -260,6 +261,199 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc5=%u", time.second);
 }
 #endif
+
+void Nextion::set_httprequest(http_request::HttpRequestComponent *http_request) { this->httprequest_ = http_request; }
+
+void Nextion::downloadTftFile() {
+
+  if (!network_is_connected()) {
+    ESP_LOGD(TAG, "network is not connected");
+    return;
+  }
+
+  if ( this->is_updating_ ){
+    ESP_LOGD(TAG, "Already updating");
+    return;
+  }
+  ESP_LOGD(TAG, "Updating firmware from : %s", this->firmware_url_.c_str());
+
+  this->is_updating_ = true;
+
+  this->httprequest_->set_url(this->firmware_url_);
+  this->httprequest_->set_method("GET");
+
+  HTTPClient *http = this->httprequest_->get_httpclient();
+  this->httprequest_->send();
+
+  if (! http->connected()){
+    ESP_LOGD(TAG, "Not Connected");
+    this->is_updating_ = false;
+    return;
+  } else {
+    ESP_LOGD(TAG, "Connected");
+  }
+
+  int filelength = http->getSize();
+
+   if ( filelength < 1){
+    ESP_LOGD(TAG, "Size returned is too small");
+    this->is_updating_ = false;
+    return;
+  }
+
+
+
+   // create buffer for read
+  uint8_t buff[4096] = { 0 };
+uint8_t c;
+  uint16_t send_timer = filelength / 4096 + 1;
+  uint16_t last_send_num = filelength % 4096;
+String string = String("");
+
+  ESP_LOGD(TAG, "downloadTftFile file size %d", filelength);
+
+  // get tcp stream
+   WiFiClient * stream = http->getStreamPtr();
+
+  // tell then nextion we want to upload a file
+  //this->send_command_printf("whmi-wri %d,%d,0",len,this->baud_rate_);
+
+  ESP_LOGD(TAG,"whmi-wri %d,%d,0",filelength,this->parent_->get_baud_rate());
+
+  while(send_timer)
+    {
+        if(send_timer == 1)
+        {
+            for(uint16_t j = 1; j <= 4096; j++)
+            {
+                if(j <= last_send_num)
+                {
+                     c = stream->read();
+                    //nexSerial.write(buff);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for(uint16_t i = 1; i <= 4096; i++)
+            {
+                 c = stream->read();
+                //nexSerial.write(buff);
+            }
+        }
+        this->recvRetString(string,500,true);
+        if(string.indexOf(0x05) != -1)
+        {
+            string = "";
+        }
+        else
+        {
+          break;
+        }
+         --send_timer;
+     }
+ESP_LOGD(TAG, "downloadTftFile completed");
+  // while (http->connected() && (filelength > 0 || filelength == -1)) {
+  //   size_t size = stream->available();
+  //   if (size>0) {
+  //     int c = stream->readBytes(buff, ((size > 4096) ? 4096 : size));
+  //     //f.write(buff, c);
+  //     //ESP_LOGD(TAG, "got bytes %i",c);
+  //     if (filelength > 0)
+  //       filelength -= c;
+  //   }
+  //   else { break; }
+  //    ESP_LOGD(TAG, "bytes left %i", filelength);
+  // }
+
+   http->end();
+  this->is_updating_ = false;
+
+
+//  uint8_t c;
+//     uint16_t send_timer = 0;
+//     uint16_t last_send_num = 0;
+//     String string = String("");
+//     send_timer = _undownloadByte / 4096 + 1;
+//     last_send_num = _undownloadByte % 4096;
+
+//     while(send_timer)
+//     {
+
+//         if(send_timer == 1)
+//         {
+//             for(uint16_t j = 1; j <= 4096; j++)
+//             {
+//                 if(j <= last_send_num)
+//                 {
+//                     c = _myFile.read();
+//                     nexSerial.write(c);
+//                 }
+//                 else
+//                 {
+//                     break;
+//                 }
+//             }
+//         }
+
+//         else
+//         {
+//             for(uint16_t i = 1; i <= 4096; i++)
+//             {
+//                 c = _myFile.read();
+//                 nexSerial.write(c);
+//             }
+//         }
+//         this->recvRetString(string,500,true);
+//         if(string.indexOf(0x05) != -1)
+//         {
+//             string = "";
+//         }
+//         else
+//         {
+//             return 0;
+//         }
+//          --send_timer;
+//     }
+}
+
+uint16_t Nextion::recvRetString(String &string, uint32_t timeout,bool recv_flag)
+{
+    uint16_t ret = 0;
+    uint8_t c = 0;
+    long start;
+    bool exit_flag = false;
+    start = millis();
+    while (millis() - start <= timeout)
+    {
+        while (this.available())
+        {
+            this->read_byte(&c);
+            if(c == 0)
+            {
+                continue;
+            }
+            string += (char)c;
+            if(recv_flag)
+            {
+                if(string.indexOf(0x05) != -1)
+                {
+                    exit_flag = true;
+                }
+            }
+        }
+        if(exit_flag)
+        {
+            break;
+        }
+    }
+    ret = string.length();
+    return ret;
+}
 
 void Nextion::set_backlight_brightness(uint8_t brightness) { this->send_command_printf("dim=%u", brightness); }
 void Nextion::set_touch_sleep_timeout(uint16_t timeout) { this->send_command_printf("thsp=%u", timeout); }

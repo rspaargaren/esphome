@@ -3,6 +3,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
+#include "esphome/components/http_request/http_request.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
 #ifdef USE_TIME
@@ -384,16 +385,25 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   bool send_command_printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
 
+  void downloadTftFile();
+
   void set_wait_for_ack(bool wait_for_ack);
+
+  void set_httprequest(http_request::HttpRequestComponent *http_request);
+  void set_firmware_url(const std::string &firmware_url) { this->firmware_url_ = firmware_url; }
 
  protected:
   bool ack_();
   bool read_until_ack_();
-
+  bool is_updating_=false;
   std::vector<NextionTouchComponent *> touch_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
+  uint32_t _undownloadByte; /*undownload byte of tft file*/
+  http_request::HttpRequestComponent *httprequest_;
+  std::string firmware_url_;
+  recvRetString(String &string, uint32_t timeout, bool recv_flag);
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
@@ -409,3 +419,4 @@ class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
 
 }  // namespace nextion
 }  // namespace esphome
+
