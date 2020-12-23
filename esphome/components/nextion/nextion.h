@@ -395,7 +395,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
  protected:
   bool ack_();
   bool read_until_ack_();
-  bool is_updating_=false;
+  bool is_updating_ = false;
   std::vector<NextionTouchComponent *> touch_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
@@ -403,7 +403,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   uint32_t _undownloadByte; /*undownload byte of tft file*/
   http_request::HttpRequestComponent *httprequest_;
   std::string firmware_url_;
-  recvRetString(String &string, uint32_t timeout, bool recv_flag);
+  bool wait_for_ack();
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
@@ -419,4 +419,3 @@ class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
 
 }  // namespace nextion
 }  // namespace esphome
-
