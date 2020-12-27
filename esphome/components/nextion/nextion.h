@@ -411,6 +411,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   int total = 0;
   int _sent_packets = 0;
   bool has_updated = false;
+  bool debug_print = false;
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
