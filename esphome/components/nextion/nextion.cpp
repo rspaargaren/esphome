@@ -262,7 +262,7 @@ bool Nextion::upload_from_stream(Stream &myFile, int contentLength) {
 #endif
 
   // create buffer for read
-  uint8_t buff[4096] = {0};
+  uint8_t buff[2048] = {0};
   // read all data from server
   while (contentLength > 0) {
     // get available data size
@@ -332,6 +332,7 @@ bool Nextion::upload_from_buffer(const uint8_t *file_buf, size_t buf_size) {
       // update sent packets counter
       this->_sent_packets++;
       this->total++;
+      delayMicroseconds(100);
     }
   }
 
