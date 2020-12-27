@@ -81,12 +81,7 @@ bool Nextion::send_command_printf(const char *format, ...) {
     return false;
   }
   this->send_command_no_ack(buffer);
-  if (!this->ack_()) {
-    ESP_LOGW(TAG, "Sending command '%s' failed because no ACK was received", buffer);
-    return false;
-  }
-
-  return true;
+  return this->ack_();
 }
 void Nextion::hide_component(const char *component) { this->send_command_printf("vis %s,0", component); }
 void Nextion::show_component(const char *component) { this->send_command_printf("vis %s,1", component); }
@@ -261,83 +256,298 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc5=%u", time.second);
 }
 #endif
+bool Nextion::upload_from_stream(Stream &myFile, int contentLength) {
+#if defined ESP8266
+  yield();
+#endif
 
-void Nextion::set_httprequest(http_request::HttpRequestComponent *http_request) { this->httprequest_ = http_request; }
+  // create buffer for read
+  uint8_t buff[4096] = {0};
+  // read all data from server
+  while (contentLength > 0) {
+    // get available data size
+    size_t size = myFile.available();
+    if (size) {
+      int c = myFile.readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+      ESP_LOGD(TAG, "upload_from_stream sending %d bytes : total %d", c, this->total);
+      // Write the buffered bytes to the nextion. If this fails, return false.
+      if (!this->upload_from_buffer(buff, c)) {
+        return false;
+      }
 
-void Nextion::downloadTftFile() {
+      if (contentLength > 0) {
+        _undownloadByte -= c;
+        contentLength -= c;
+      }
+    }
+    delay(1);
+  }
+
+  return true;
+}
+
+bool Nextion::upload_from_buffer(const uint8_t *file_buf, size_t buf_size) {
+#if defined ESP8266
+  yield();
+#endif
+
+  uint8_t c;
+  uint8_t timeout = 0;
+  String string = String("");
+
+  for (uint16_t i = 0; i < buf_size; i++) {
+    // Users must split the .tft file contents into 4096 byte sized packets with
+    // the final partial packet size equal to the last remaining bytes (<4096
+    // bytes).
+    if (this->_sent_packets == 4096) {
+      // wait for the Nextion to return its 0x05 byte confirming reception and
+      // readiness to receive the next packets
+      this->recvRetString(string, 500, true);
+      if (string.indexOf(0x05) != -1) {
+        // reset sent packets counter
+        this->_sent_packets = 0;
+
+        // reset receive String
+        string = "";
+      } else {
+        if (timeout >= 8) {
+          ESP_LOGD(TAG, "serial connection lost");
+          return false;
+        }
+
+        timeout++;
+      }
+
+      // delay current byte
+      i--;
+
+    } else {
+      // read buffer
+      c = file_buf[i];
+
+      // write byte to nextion over serial
+      this->write_byte(c);
+
+      // update sent packets counter
+      this->_sent_packets++;
+      this->total++;
+    }
+  }
+
+  return true;
+}
+
+bool Nextion::upload_by_chunks(int contentLength, int chunk_size) {
+  ESP_LOGD(TAG, "upload_by_chunks: contentLength %d , chunk_size: %d", contentLength, chunk_size);
+
+  for (int range_start = 0; range_start < contentLength; range_start += chunk_size) {
+    int range_end = range_start + chunk_size - 1;
+    if (range_end > contentLength)
+      range_end = contentLength;
+
+    HTTPClient http;
+    if (!http.begin(this->firmware_url_.c_str())) {
+      ESP_LOGD(TAG, "upload_by_chunks: connection failed");
+      return false;
+    }
+    char rangeHeader[64];
+    sprintf(rangeHeader, "bytes=%d-%d", range_start, range_end);
+
+    http.addHeader("Range", rangeHeader);
+
+    ESP_LOGD(TAG, "Requesting range: %s", rangeHeader);
+
+    http.setReuse(true);
+    int code = http.GET();
+    if (code == 200 || code == 206) {
+      // Upload the received byte Stream to the nextion
+      bool result = this->upload_from_stream(*http.getStreamPtr(), range_end - range_start);
+      if (result) {
+        ESP_LOGD(TAG, "Succesfully sent chunk to Nextion");
+      } else {
+        ESP_LOGD(TAG, "Error updating Nextion");
+        http.end();
+        return false;
+      }
+    } else {
+      http.end();
+      return false;
+    }
+    http.end();  // End this HTTP call because we read all the data
+  }
+
+  if (contentLength % 4096 != 0) {  // If not in 4096 chunks wait for the last bits to confirm
+    String string = String("");
+    uint8_t timeout = 0;
+    this->recvRetString(string, 500, true);
+    if (string.indexOf(0x05) != -1) {
+      // reset sent packets counter
+      this->_sent_packets = 0;
+
+      // reset receive String
+      string = "";
+    } else {
+      if (timeout >= 8) {
+        ESP_LOGD(TAG, "serial connection lost");
+        return false;
+      }
+
+      timeout++;
+    }
+  }
+  //  this->loop();
+
+  return true;
+}
+
+uint16_t Nextion::recvRetString(String &response, uint32_t timeout, bool recv_flag) {
+#if defined ESP8266
+  yield();
+#endif
+
+  uint16_t ret = 0;
+  uint8_t c = 0;
+  uint8_t nr_of_FF_bytes = 0;
+  long start;
+  bool exit_flag = false;
+  bool ff_flag = false;
+  if (timeout != 500)
+    ESP_LOGD(TAG, "timeout setting serial read: %d", timeout);
+
+  start = millis();
+
+  while (millis() - start <= timeout) {
+    while (this->available()) {
+      c = this->read();
+      if (c == 0) {
+        continue;
+      }
+
+      if (c == 0xFF)
+        nr_of_FF_bytes++;
+      else {
+        nr_of_FF_bytes = 0;
+        ff_flag = false;
+      }
+
+      if (nr_of_FF_bytes >= 3)
+        ff_flag = true;
+
+      response += (char) c;
+
+      if (recv_flag) {
+        if (response.indexOf(0x05) != -1) {
+          exit_flag = true;
+        }
+      }
+    }
+    if (exit_flag || ff_flag) {
+      break;
+    }
+  }
+
+  if (ff_flag)
+    response = response.substring(0, response.length() - 3);  // Remove last 3 0xFF
+
+  ret = response.length();
+  return ret;
+}
+
+void Nextion::softReset(void) {
+  // soft reset nextion device
+  this->send_command_no_ack("rest");
+}
+
+void Nextion::upload_firmware() {
+  if (this->has_updated) {
+    ESP_LOGD(TAG, "Already Updated");
+    return;
+  }
+
+  if (this->is_updating_) {
+    ESP_LOGD(TAG, "Currently updating");
+    return;
+  }
+
   if (!network_is_connected()) {
     ESP_LOGD(TAG, "network is not connected");
     return;
   }
 
-  if (this->is_updating_) {
-    ESP_LOGD(TAG, "Already updating");
-    return;
-  }
   ESP_LOGD(TAG, "Updating firmware from : %s", this->firmware_url_.c_str());
 
   this->is_updating_ = true;
 
-  this->httprequest_->set_url(this->firmware_url_);
-  this->httprequest_->set_method("GET");
-
-  HTTPClient *http = this->httprequest_->get_httpclient();
-  this->httprequest_->send();
-
-  if (!http->connected()) {
-    ESP_LOGD(TAG, "Not Connected");
+  HTTPClient http;
+  if (!http.begin(this->firmware_url_.c_str())) {
     this->is_updating_ = false;
+    ESP_LOGD(TAG, "connection failed");
     return;
   } else {
     ESP_LOGD(TAG, "Connected");
   }
+  http.addHeader("Range", "bytes=0-255");
+  const char *headerNames[] = {"Content-Range"};
+  http.collectHeaders(headerNames, 1);
+  ESP_LOGD(TAG, "Requesting URL: %s", this->firmware_url_.c_str());
 
-  int filelength = http->getSize();
+  http.setReuse(true);
+  int code = http.GET();
+  // Update the nextion display
+  if (code == 200 || code == 206) {
+    String content_range_string = http.header("Content-Range");
+    content_range_string.remove(0, 12);
+    int contentLength = content_range_string.toInt();
+    http.end();  // End this HTTP call because we read all the data
+    delay(2);
 
-  if (filelength < 1) {
-    ESP_LOGD(TAG, "Size returned is too small");
-    this->is_updating_ = false;
-    return;
-  }
+    ESP_LOGD(TAG, "Updating Nextion...");
 
-  // create buffer for read
-  uint8_t buff[4096] = {0};
-  ESP_LOGD(TAG, "downloadTftFile file size %d", filelength);
+    String response = String("");
+    bool result;
+    this->_undownloadByte = contentLength;
 
-  // get tcp stream
-  WiFiClient *stream = http->getStreamPtr();
+    char command[128];
+    sprintf(command, "whmi-wri %d,%d,0", contentLength, this->parent_->get_baud_rate());
+    this->send_command_no_ack(command);
+    // if (!this->send_command_no_ack(command) {
+    //   ESP_LOGD(TAG, "Preparation for firmware update timed out on ack");
+    //   return;
+    // }
+    this->recvRetString(response, 800, true);  // normal response time is 400ms
 
-  ESP_LOGD(TAG, "whmi-wri %d,%d,0", filelength, this->parent_->get_baud_rate());
-  this->send_command_printf("whmi-wri %d,%d,0", filelength, this->parent_->get_baud_rate());
-  uint32_t count = 0;
-
-  while (http->connected() && (filelength > 0 || filelength == -1)) {
-    int toread = std::min((size_t) filelength, sizeof(buff));
-
-    int c = stream->readBytes(buff, toread);
-    if (!c) {
-      ESP_LOGD(TAG, "read timeout");
-      continue;
+    // The Nextion display will, if it's ready to accept data, send a 0x05 byte.
+    if (response.indexOf(0x05) != -1) {
+      ESP_LOGD(TAG, "preparation for firmware update done");
+    } else {
+      ESP_LOGD(TAG, "preparation for firmware update failed");
+      return;
     }
-    count += c;
+    ESP_LOGD(TAG, "Start upload. File size is: %d bytes", contentLength);
+    // Upload the received byte Stream to the nextion
+    result = this->upload_by_chunks(contentLength);
 
-    //    this->write_array(buff, c); CRASHES
+    if (result) {
+      ESP_LOGD(TAG, "Succesfully updated Nextion! Sleep for 1600ms");
+    } else {
+      ESP_LOGD(TAG, "Error updating Nextion:");
+      return;
+    }
 
-    if (filelength > 0)
-      filelength -= c;
+    // end: wait(delay) for the nextion to finish the update process, send
+    // nextion reset command and end the serial connection to the nextion
+    // wait for the nextion to finish internal processes
+    delay(1600);
 
-    ESP_LOGD(TAG, "bytes left %i", filelength);
-  }
+    // soft reset the nextion
+    this->softReset();
 
-  ESP_LOGD(TAG, "downloadTftFile2 completed: %d bytes", count);
-  if (this->wait_for_ack()) {
-    ESP_LOGD(TAG, "downloadTftFile wait_for_ack");
+    ESP_LOGD(TAG, "Nextion has been updated");
+    this->has_updated = true;
   } else {
-    ESP_LOGD(TAG, "downloadTftFile NO wait_for_ack");
+    ESP_LOGD(TAG, "Nextion has NOT been updated, Bad HTTP status %d", code);
   }
-
-  ESP_LOGD(TAG, "downloadTftFile completed: %d bytes", count);
-  http->end();
+  this->_sent_packets = 0;
   this->is_updating_ = false;
 
 }  // namespace nextion

@@ -1,7 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import display, uart
-from esphome.components.http_request import HttpRequestComponent
 from esphome.const import CONF_ID, CONF_LAMBDA, CONF_BRIGHTNESS
 from . import nextion_ns
 
@@ -17,7 +16,6 @@ CONFIG_SCHEMA = (
     display.BASIC_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(Nextion),
-            cv.Optional(CONF_HTTP_REQUEST_ID): cv.use_id(HttpRequestComponent),
             cv.Optional(CONF_FIRMWARE_URL, default=""): cv.string,
             cv.Optional(CONF_BRIGHTNESS, default=1.0): cv.percentage,
         }
@@ -47,9 +45,7 @@ def to_code(config):
         )
         cg.add(var.set_writer(lambda_))
 
-    if CONF_HTTP_REQUEST_ID in config:
-        httprequest_pointer = yield cg.get_variable(config[CONF_HTTP_REQUEST_ID])
-        cg.add(var.set_httprequest(httprequest_pointer))
+    if CONF_FIRMWARE_URL in config:
         cg.add(var.set_firmware_url(config[CONF_FIRMWARE_URL]))
 
     yield display.register_display(var, config)

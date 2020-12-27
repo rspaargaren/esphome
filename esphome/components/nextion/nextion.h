@@ -3,8 +3,8 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
-#include "esphome/components/http_request/http_request.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include <HTTPClient.h>
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -385,12 +385,16 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   bool send_command_printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
 
-  void downloadTftFile();
+  void upload_firmware();
 
   void set_wait_for_ack(bool wait_for_ack);
 
-  void set_httprequest(http_request::HttpRequestComponent *http_request);
   void set_firmware_url(const std::string &firmware_url) { this->firmware_url_ = firmware_url; }
+  bool upload_by_chunks(int contentLength, int chunk_size = 8192);  // chunk_size
+  bool upload_from_stream(Stream &myFile, int contentLength);
+  bool upload_from_buffer(const uint8_t *file_buf, size_t buf_size);
+  void softReset(void);
+  uint16_t recvRetString(String &response, uint32_t timeout, bool recv_flag);
 
  protected:
   bool ack_();
@@ -400,10 +404,13 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
-  uint32_t _undownloadByte; /*undownload byte of tft file*/
-  http_request::HttpRequestComponent *httprequest_;
+  uint32_t undownload_byte_; /*undownload byte of tft file*/
   std::string firmware_url_;
+  uint32_t _undownloadByte; /* undownload byte of tft file */
   bool wait_for_ack();
+  int total = 0;
+  int _sent_packets = 0;
+  bool has_updated = false;
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
