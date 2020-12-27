@@ -269,7 +269,8 @@ bool Nextion::upload_from_stream(Stream &myFile, int contentLength) {
     size_t size = myFile.available();
     if (size) {
       int c = myFile.readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-      ESP_LOGD(TAG, "upload_from_stream sending %d bytes : total %d", c, this->total);
+      if (this->debug_print)
+        ESP_LOGD(TAG, "upload_from_stream sending %d bytes : total %d", c, this->total);
       // Write the buffered bytes to the nextion. If this fails, return false.
       if (!this->upload_from_buffer(buff, c)) {
         return false;
@@ -338,7 +339,8 @@ bool Nextion::upload_from_buffer(const uint8_t *file_buf, size_t buf_size) {
 }
 
 bool Nextion::upload_by_chunks(int contentLength, int chunk_size) {
-  ESP_LOGD(TAG, "upload_by_chunks: contentLength %d , chunk_size: %d", contentLength, chunk_size);
+  if (this->debug_print)
+    ESP_LOGD(TAG, "upload_by_chunks: contentLength %d , chunk_size: %d", contentLength, chunk_size);
 
   for (int range_start = 0; range_start < contentLength; range_start += chunk_size) {
     int range_end = range_start + chunk_size - 1;
@@ -355,7 +357,8 @@ bool Nextion::upload_by_chunks(int contentLength, int chunk_size) {
 
     http.addHeader("Range", rangeHeader);
 
-    ESP_LOGD(TAG, "Requesting range: %s", rangeHeader);
+    if (this->debug_print)
+      ESP_LOGD(TAG, "Requesting range: %s", rangeHeader);
 
     http.setReuse(true);
     int code = http.GET();
@@ -363,7 +366,8 @@ bool Nextion::upload_by_chunks(int contentLength, int chunk_size) {
       // Upload the received byte Stream to the nextion
       bool result = this->upload_from_stream(*http.getStreamPtr(), range_end - range_start);
       if (result) {
-        ESP_LOGD(TAG, "Succesfully sent chunk to Nextion");
+        if (this->debug_print)
+          ESP_LOGD(TAG, "Succesfully sent chunk to Nextion");
       } else {
         ESP_LOGD(TAG, "Error updating Nextion");
         http.end();
