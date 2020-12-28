@@ -435,7 +435,7 @@ uint16_t Nextion::recvRetString_(String &response, uint32_t timeout, bool recv_f
   bool exit_flag = false;
   bool ff_flag = false;
   if (timeout != 500)
-    ESP_LOGD(TAG, "timeout setting serial read: %d", timeout);
+    ESP_LOGD(TAG, "timeout serial read: %d", timeout);
 
   start = millis();
 
@@ -476,12 +476,10 @@ uint16_t Nextion::recvRetString_(String &response, uint32_t timeout, bool recv_f
   return ret;
 }
 
-void Nextion::softReset(void) {
-  // soft reset nextion device
-  this->send_command_no_ack("rest");
-}
+void Nextion::softReset(void) { this->send_command_no_ack("rest"); }
 
 void Nextion::upload_tft() {
+  int old_baud = this->parent_->get_baud_rate();
   if (this->has_updated_) {
     ESP_LOGD(TAG, "Already Updated");
     return;
@@ -516,7 +514,14 @@ void Nextion::upload_tft() {
   ESP_LOGD(TAG, "Requesting URL: %s", this->tft_url_.c_str());
 
   http.setReuse(true);
+  // try up to 5 times. DNS sometimes needs a second try or so
+  int tries = 0;
   int code = http.GET();
+  while (code != 200 && code != 206 && tries < 5) {
+    delay(200);
+    code = http.GET();
+    ++tries;
+  }
   // Update the nextion display
   if (code == 200 || code == 206) {
     String content_range_string = http.header("Content-Range");
@@ -540,6 +545,8 @@ void Nextion::upload_tft() {
       ESP_LOGD(TAG, "preparation for tft update done");
     } else {
       ESP_LOGD(TAG, "preparation for tft update failed");
+      this->sent_packets_ = 0;
+      this->is_updating_ = false;
       return;
     }
     ESP_LOGD(TAG, "Start upload. File size is: %d bytes", contentLength);
@@ -550,6 +557,8 @@ void Nextion::upload_tft() {
       ESP_LOGD(TAG, "Succesfully updated Nextion! Sleep for 1600ms");
     } else {
       ESP_LOGD(TAG, "Error updating Nextion:");
+      this->sent_packets_ = 0;
+      this->is_updating_ = false;
       return;
     }
 
