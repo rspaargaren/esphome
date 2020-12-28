@@ -377,10 +377,17 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
     http.addHeader("Range", rangeHeader);
 
     if (this->debug_print_)
-      ESP_LOGD(TAG, "Requesting range: %s", rangeHeader);
+      ESP_LOGD(TAG, "upload_by_chunks_ Requesting range: %s", rangeHeader);
 
-    http.setReuse(true);
+    // http.setReuse(true);
+    int tries = 1;
     int code = http.GET();
+    while (code != 200 && code != 206 && tries <= 5) {
+      ESP_LOGD(TAG, "upload_by_chunks_ retrying (%d/5)", tries);
+      delay(200);
+      code = http.GET();
+      ++tries;
+    }
     if (code == 200 || code == 206) {
       // Upload the received byte Stream to the nextion
       bool result = this->upload_from_stream_(*http.getStreamPtr(), range_end - range_start);
@@ -388,7 +395,7 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
         if (this->debug_print_)
           ESP_LOGD(TAG, "Succesfully sent chunk to Nextion");
       } else {
-        ESP_LOGD(TAG, "Error updating Nextion");
+        ESP_LOGD(TAG, "upload_by_chunks_: Error updating Nextion");
         http.end();
         return false;
       }
@@ -418,7 +425,7 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
       timeout++;
     }
   }
-  //  this->loop();
+  delay(100);
 
   return true;
 }
@@ -441,7 +448,7 @@ uint16_t Nextion::recvRetString_(String &response, uint32_t timeout, bool recv_f
 
   while (millis() - start <= timeout) {
     while (this->available()) {
-      c = this->read();
+      this->read_byte(&c);
       if (c == 0) {
         continue;
       }
@@ -537,6 +544,8 @@ void Nextion::upload_tft() {
     char command[128];
     sprintf(command, "whmi-wri %d,%d,0", contentLength, this->parent_->get_baud_rate());
     this->send_command_no_ack(command);
+    // Flush
+    this->flush();
 
     this->recvRetString_(response, 800, true);  // normal response time is 400ms
 
@@ -572,6 +581,7 @@ void Nextion::upload_tft() {
 
     ESP_LOGD(TAG, "Nextion has been updated");
     this->has_updated_ = true;
+    ESP.restart();
   } else {
     ESP_LOGD(TAG, "Nextion has NOT been updated, Bad HTTP status %d", code);
   }
