@@ -434,7 +434,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   /*
    * Receive string data.
    *
-   * @param buffer - save string data.
+   * @param response - save string data.
    * @param timeout - set timeout time.
    * @param recv_flag - if recv_flag is true,will braak when receive 0x05.
    *
