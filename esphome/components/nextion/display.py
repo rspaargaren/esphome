@@ -7,7 +7,7 @@ from . import nextion_ns
 DEPENDENCIES = ["uart", "network"]
 AUTO_LOAD = ["binary_sensor"]
 CONF_HTTP_REQUEST_ID = "http_request_id"
-CONF_FIRMWARE_URL = "firmware_url"
+CONF_TFT_URL = "tft_url"
 
 Nextion = nextion_ns.class_("Nextion", cg.PollingComponent, uart.UARTDevice)
 NextionRef = Nextion.operator("ref")
@@ -16,20 +16,13 @@ CONFIG_SCHEMA = (
     display.BASIC_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(Nextion),
-            cv.Optional(CONF_FIRMWARE_URL, default=""): cv.string,
+            cv.Optional(CONF_TFT_URL, default=""): cv.string,
             cv.Optional(CONF_BRIGHTNESS, default=1.0): cv.percentage,
         }
     )
     .extend(cv.polling_component_schema("5s"))
     .extend(uart.UART_DEVICE_SCHEMA)
 )
-
-
-def validate_firmware_section(config):
-    url_ = config[CONF_FIRMWARE_URL]
-    if config.get(CONF_HTTP_REQUEST_ID) and url_.len() == 0:
-        raise cv.Invalid("Firmware URL is empty")
-    return config
 
 
 def to_code(config):
@@ -45,7 +38,7 @@ def to_code(config):
         )
         cg.add(var.set_writer(lambda_))
 
-    if CONF_FIRMWARE_URL in config:
-        cg.add(var.set_firmware_url(config[CONF_FIRMWARE_URL]))
+    if CONF_TFT_URL in config:
+        cg.add(var.set_tft_url(config[CONF_TFT_URL]))
 
     yield display.register_display(var, config)
