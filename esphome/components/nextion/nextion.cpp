@@ -25,11 +25,11 @@ void Nextion::setup() {
 
 void Nextion::dump_config() {
   ESP_LOGCONFIG(TAG, "Nextion:");
-  ESP_LOGCONFIG("  Baud Rate:        %d", this->parent_->get_baud_rate());
-  ESP_LOGCONFIG("  Device Model:     %s", this->device_model_);
-  ESP_LOGCONFIG("  Firmware Version: %s", this->firmware_version_);
-  ESP_LOGCONFIG("  Serial Number:    %s", this->serial_number_);
-  ESP_LOGCONFIG("  Flash Size:       %s", this->flash_size_);
+  ESP_LOGCONFIG(TAG, "  Baud Rate:        %d", this->parent_->get_baud_rate());
+  ESP_LOGCONFIG(TAG, "  Device Model:     %s", this->device_model_);
+  ESP_LOGCONFIG(TAG, "  Firmware Version: %s", this->firmware_version_);
+  ESP_LOGCONFIG(TAG, "  Serial Number:    %s", this->serial_number_);
+  ESP_LOGCONFIG(TAG, "  Flash Size:       %s", this->flash_size_);
 }
 
 float Nextion::get_setup_priority() const { return setup_priority::PROCESSOR; }
