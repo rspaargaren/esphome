@@ -385,33 +385,76 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   bool send_command_printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
 
-  void upload_firmware();
-
   void set_wait_for_ack(bool wait_for_ack);
 
-  void set_firmware_url(const std::string &firmware_url) { this->firmware_url_ = firmware_url; }
-  bool upload_by_chunks(int contentLength, int chunk_size = 8192);  // chunk_size
-  bool upload_from_stream(Stream &myFile, int contentLength);
-  bool upload_from_buffer(const uint8_t *file_buf, size_t buf_size);
+  /**
+   * Set the tft file URL. https seems problamtic with arduino..
+   */
+  void set_tft_url(const std::string &tft_url) { this->tft_url_ = tft_url; }
+
+  /**
+   * Upload the tft file and softreset the Nextion
+   */
+  void upload_tft();
+  void dump_config() override;
+
+  /**
+   * Softreset the Nextion
+   */
   void softReset(void);
-  uint16_t recvRetString(String &response, uint32_t timeout, bool recv_flag);
 
  protected:
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
+  /**
+   * will request chunk_size chunks from the web server
+   * and send each to the nextion
+   * @param int contentLength Total size of the file
+   * @return true if success, false for failure.
+   */
+  bool upload_by_chunks_(int contentLength, int chunk_size = 4096);
+  /**
+   * start update tft file to nextion.
+   *
+   * @param Stream &myFile
+   * @param int contentLength Total size of the file
+   * @return true if success, false for failure.
+   */
+  bool upload_from_stream_(Stream &myFile, int contentLength);
+
+  /**
+   * start update tft file to nextion.
+   *
+   * @param const uint8_t *file_buf
+   * @param size_t buf_size
+   * @return true if success, false for failure.
+   */
+  bool upload_from_buffer_(const uint8_t *file_buf, size_t buf_size);
+  /*
+   * Receive string data.
+   *
+   * @param buffer - save string data.
+   * @param timeout - set timeout time.
+   * @param recv_flag - if recv_flag is true,will braak when receive 0x05.
+   *
+   * @return the length of string buffer.
+   *
+   */
+  uint16_t recvRetString_(String &response, uint32_t timeout = 500, bool recv_flag = false);
   std::vector<NextionTouchComponent *> touch_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
-  uint32_t undownload_byte_; /*undownload byte of tft file*/
-  std::string firmware_url_;
-  uint32_t _undownloadByte; /* undownload byte of tft file */
-  bool wait_for_ack();
-  int total = 0;
-  int _sent_packets = 0;
-  bool has_updated = false;
-  bool debug_print = false;
+  std::string tft_url_;
+  int total_ = 0;
+  int sent_packets_ = 0;
+  bool has_updated_ = false;
+  bool debug_print_ = false;
+  char device_model_[64];
+  char firmware_version_[64];
+  char serial_number_[64];
+  char flash_size_[64];
 };
 
 class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
