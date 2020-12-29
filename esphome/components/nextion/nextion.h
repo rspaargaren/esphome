@@ -4,6 +4,8 @@
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/switch/switch.h"
+#include "esphome/components/sensor/sensor.h"
 #include <HTTPClient.h>
 
 #ifdef USE_TIME
@@ -14,6 +16,8 @@ namespace esphome {
 namespace nextion {
 
 class NextionTouchComponent;
+class NextionSwitch;
+class NextionSensor;
 class Nextion;
 
 using nextion_writer_t = std::function<void(Nextion &)>;
@@ -365,6 +369,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
   void register_touch_component(NextionTouchComponent *obj) { this->touch_.push_back(obj); }
+  void register_switch_component(NextionSwitch *obj) { this->switchtype_.push_back(obj); }
+  void register_sensor_component(NextionSensor *obj) { this->sensortype_.push_back(obj); }
   void setup() override;
   void set_brightness(float brightness) { this->brightness_ = brightness; }
   float get_setup_priority() const override;
@@ -443,6 +449,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   uint16_t recvRetString_(String &response, uint32_t timeout = 500, bool recv_flag = false);
   std::vector<NextionTouchComponent *> touch_;
+  std::vector<NextionSwitch *> switchtype_;
+  std::vector<NextionSensor *> sensortype_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
@@ -462,6 +470,32 @@ class NextionTouchComponent : public binary_sensor::BinarySensorInitiallyOff {
   void set_page_id(uint8_t page_id) { page_id_ = page_id; }
   void set_component_id(uint8_t component_id) { component_id_ = component_id; }
   void process(uint8_t page_id, uint8_t component_id, bool on);
+
+ protected:
+  uint8_t page_id_;
+  uint8_t component_id_;
+};
+class NextionSwitch : public switch_::Switch, public Component, public uart::UARTDevice {
+ public:
+  void set_page_id(uint8_t page_id) { page_id_ = page_id; }
+  void set_component_id(uint8_t component_id) { component_id_ = component_id; }
+  void set_device_id(std::string device_id) { device_id_ = device_id; }
+  void process(uint8_t page_id, uint8_t component_id, bool on);
+  void send_command_no_ack(const char *command);
+  bool send_command_printf(const char *format, ...);
+
+ protected:
+  uint8_t page_id_;
+  uint8_t component_id_;
+  std::string device_id_;
+  void write_state(bool state) override;
+};
+
+class NextionSensor : public sensor::Sensor, public uart::UARTDevice {
+ public:
+  void set_page_id(uint8_t page_id) { page_id_ = page_id; }
+  void set_component_id(uint8_t component_id) { component_id_ = component_id; }
+  void process(uint8_t page_id, uint8_t component_id, float state);
 
  protected:
   uint8_t page_id_;

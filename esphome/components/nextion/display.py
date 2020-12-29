@@ -5,7 +5,7 @@ from esphome.const import CONF_ID, CONF_LAMBDA, CONF_BRIGHTNESS
 from . import nextion_ns
 
 DEPENDENCIES = ["uart", "network"]
-AUTO_LOAD = ["binary_sensor"]
+AUTO_LOAD = ["binary_sensor", "switch", "sensor"]
 CONF_HTTP_REQUEST_ID = "http_request_id"
 CONF_TFT_URL = "tft_url"
 
