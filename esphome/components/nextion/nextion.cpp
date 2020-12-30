@@ -11,7 +11,7 @@ void Nextion::setup() {
   String response = String("");
   this->send_command_no_ack("");
   this->send_command_no_ack("connect");
-  this->recvRetString_(response);
+  this->recv_ret_string_(response);
   if (response.indexOf(F("comok")) == -1) {
     ESP_LOGD(TAG, "display doesn't accept the first connect request");
   } else {
@@ -72,14 +72,26 @@ void Nextion::display_picture(int picture_id, int x_start, int y_start) {
 void Nextion::set_component_background_color(const char *component, const char *color) {
   this->send_command_printf("%s.bco=\"%s\"", component, color);
 }
+void Nextion::set_component_background_color(const char *component, Color color) {
+  this->send_command_printf("%s.bco=%d", component, color.to_565());
+}
 void Nextion::set_component_pressed_background_color(const char *component, const char *color) {
   this->send_command_printf("%s.bco2=\"%s\"", component, color);
+}
+void Nextion::set_component_pressed_background_color(const char *component, Color color) {
+  this->send_command_printf("%s.bco2=%d", component, color.to_565());
 }
 void Nextion::set_component_font_color(const char *component, const char *color) {
   this->send_command_printf("%s.pco=\"%s\"", component, color);
 }
+void Nextion::set_component_font_color(const char *component, Color color) {
+  this->send_command_printf("%s.pco=%d", component, color.to_565());
+}
 void Nextion::set_component_pressed_font_color(const char *component, const char *color) {
   this->send_command_printf("%s.pco2=\"%s\"", component, color);
+}
+void Nextion::set_component_pressed_font_color(const char *component, Color color) {
+  this->send_command_printf("%s.pco2=%d", component, color.to_565());
 }
 void Nextion::set_component_coordinates(const char *component, int x, int y) {
   this->send_command_printf("%s.xcen=%d", component, x);
@@ -304,7 +316,7 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc5=%u", time.second);
 }
 #endif
-bool Nextion::upload_from_stream(Stream &my_file, int content_length) {
+bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
 #if defined ESP8266
   yield();
 #endif
@@ -350,7 +362,7 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
     if (this->sent_packets_ == 4096) {
       // wait for the Nextion to return its 0x05 byte confirming reception and
       // readiness to receive the next packets
-      this->recvRetString_(string, 500, true);
+      this->recv_ret_string_(string, 500, true);
       if (string.indexOf(0x05) != -1) {
         // reset sent packets counter
         this->sent_packets_ = 0;
@@ -401,12 +413,12 @@ bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
       return false;
     }
     char range_header[64];
-    sprintf(rangeHeader, "bytes=%d-%d", range_start, range_end);
+    sprintf(range_header, "bytes=%d-%d", range_start, range_end);
 
-    http.addHeader("Range", rangeHeader);
+    http.addHeader("Range", range_header);
 
     if (this->debug_print_)
-      ESP_LOGD(TAG, "upload_by_chunks_ Requesting range: %s", rangeHeader);
+      ESP_LOGD(TAG, "upload_by_chunks_ Requesting range: %s", range_header);
 
     // http.setReuse(true);
     int tries = 1;
@@ -438,7 +450,7 @@ bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
   if (content_length % 4096 != 0) {  // If not in 4096 chunks wait for the last bits to confirm
     String string = String("");
     uint8_t timeout = 0;
-    this->recvRetString_(string, 500, true);
+    this->recv_ret_string_(string, 500, true);
     if (string.indexOf(0x05) != -1) {
       // reset sent packets counter
       this->sent_packets_ = 0;
@@ -458,14 +470,14 @@ bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
   return true;
 }
 
-uint16_t Nextion::recv_ret_string(String &response, uint32_t timeout, bool recv_flag) {
+uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv_flag) {
 #if defined ESP8266
   yield();
 #endif
 
   uint16_t ret = 0;
   uint8_t c = 0;
-  uint8_t nr_of_ff_bytes = 0;
+  uint8_t nr_of_FF_bytes = 0;
   long start;
   bool exit_flag = false;
   bool ff_flag = false;
@@ -545,7 +557,7 @@ void Nextion::upload_tft() {
   }
   http.addHeader("Range", "bytes=0-255");
   const char *header_names[] = {"Content-Range"};
-  http.collectHeaders(headerNames, 1);
+  http.collectHeaders(header_names, 1);
   ESP_LOGD(TAG, "Requesting URL: %s", this->tft_url_.c_str());
 
   http.setReuse(true);
@@ -570,12 +582,12 @@ void Nextion::upload_tft() {
     String response = String("");
     bool result;
     char command[128];
-    sprintf(command, "whmi-wri %d,%d,0", contentLength, this->parent_->get_baud_rate());
+    sprintf(command, "whmi-wri %d,%d,0", content_length, this->parent_->get_baud_rate());
     this->send_command_no_ack(command);
     // Flush
     this->flush();
 
-    this->recvRetString_(response, 800, true);  // normal response time is 400ms
+    this->recv_ret_string_(response, 800, true);  // normal response time is 400ms
 
     // The Nextion display will, if it's ready to accept data, send a 0x05 byte.
     if (response.indexOf(0x05) != -1) {
@@ -586,7 +598,7 @@ void Nextion::upload_tft() {
       this->is_updating_ = false;
       return;
     }
-    ESP_LOGD(TAG, "Start upload. File size is: %d bytes", contentLength);
+    ESP_LOGD(TAG, "Start upload. File size is: %d bytes", content_length);
     // Upload the received byte Stream to the nextion
     result = this->upload_by_chunks_(content_length);
 
@@ -606,7 +618,7 @@ void Nextion::upload_tft() {
     delay(45);
 
     // soft reset the nextion
-    this->softReset();
+    this->soft_reset();
 
     ESP_LOGD(TAG, "Nextion has been updated");
     this->has_updated_ = true;
@@ -621,7 +633,11 @@ void Nextion::upload_tft() {
 
 void Nextion::set_backlight_brightness(uint8_t brightness) { this->send_command_printf("dim=%u", brightness); }
 void Nextion::set_touch_sleep_timeout(uint16_t timeout) { this->send_command_printf("thsp=%u", timeout); }
-
+void Nextion::set_wake_up_page(uint8_t page_id) { this->send_command_printf("wup=%u", page_id); }
+void Nextion::set_auto_wake_on_touch(bool auto_wake) {
+  auto_wake ? this->send_command_no_ack("thup=1") : this->send_command_no_ack("thup=0");
+}
+void Nextion::sleep(bool sleep) { sleep ? this->send_command_no_ack("sleep=1") : this->send_command_no_ack("sleep=0"); }
 void Nextion::set_writer(const nextion_writer_t &writer) { this->writer_ = writer; }
 void Nextion::set_component_text_printf(const char *component, const char *format, ...) {
   va_list arg;
@@ -647,7 +663,7 @@ void NextionSwitch::process(uint8_t page_id, uint8_t component_id, bool on) {
   }
 }
 
-void NextionSwitch::write_state_(bool state) {
+void NextionSwitch::write_state(bool state) {
   this->publish_state(state);
   this->send_command_printf("%s=%d", this->device_id_.c_str(), state);
 }

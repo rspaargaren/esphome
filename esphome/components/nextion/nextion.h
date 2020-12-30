@@ -6,6 +6,7 @@
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/core/color.h"
 #include <HTTPClient.h>
 
 #ifdef USE_TIME
@@ -88,7 +89,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    * Example:
    * ```cpp
-   * it.set_component_background_color("button", "17013");
+   * it.set_component_background_color("button", "RED");
    * ```
    *
    * This will change the background color of the component `button` to blue.
@@ -97,13 +98,28 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void set_component_background_color(const char *component, const char *color);
   /**
+   * Set the background color of a component.
+   * @param component The component name.
+   * @param color The color (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_background_color("button", color);
+   * ```
+   *
+   * This will change the background color of the component `button` to blue.
+   * Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to
+   * Nextion HMI colors.
+   */
+  void set_component_background_color(const char *component, Color color);
+  /**
    * Set the pressed background color of a component.
    * @param component The component name.
    * @param color The color (as a string).
    *
    * Example:
    * ```cpp
-   * it.set_component_pressed_background_color("button", "17013");
+   * it.set_component_pressed_background_color("button", "RED");
    * ```
    *
    * This will change the pressed background color of the component `button` to blue. This is the background color that
@@ -113,13 +129,29 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void set_component_pressed_background_color(const char *component, const char *color);
   /**
+   * Set the pressed background color of a component.
+   * @param component The component name.
+   * @param color The color (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_pressed_background_color("button", color);
+   * ```
+   *
+   * This will change the pressed background color of the component `button` to blue. This is the background color that
+   * is shown when the component is pressed. Use this [color
+   * picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to Nextion HMI
+   * colors.
+   */
+  void set_component_pressed_background_color(const char *component, Color color);
+  /**
    * Set the font color of a component.
    * @param component The component name.
    * @param color The color (as a string).
    *
    * Example:
    * ```cpp
-   * it.set_component_font_color("textview", "17013");
+   * it.set_component_font_color("textview", "RED");
    * ```
    *
    * This will change the font color of the component `textview` to a blue color.
@@ -128,13 +160,28 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void set_component_font_color(const char *component, const char *color);
   /**
+   * Set the font color of a component.
+   * @param component The component name.
+   * @param color The color (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_font_color("textview", color);
+   * ```
+   *
+   * This will change the font color of the component `textview` to a blue color.
+   * Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to
+   * Nextion HMI colors.
+   */
+  void set_component_font_color(const char *component, Color color);
+  /**
    * Set the pressed font color of a component.
    * @param component The component name.
    * @param color The color (as a string).
    *
    * Example:
    * ```cpp
-   * it.set_component_pressed_font_color("button", "17013");
+   * it.set_component_pressed_font_color("button", "RED");
    * ```
    *
    * This will change the pressed font color of the component `button` to a blue color.
@@ -142,6 +189,21 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * Nextion HMI colors.
    */
   void set_component_pressed_font_color(const char *component, const char *color);
+  /**
+   * Set the pressed font color of a component.
+   * @param component The component name.
+   * @param color The color (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_pressed_font_color("button", color);
+   * ```
+   *
+   * This will change the pressed font color of the component `button` to a blue color.
+   * Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to
+   * Nextion HMI colors.
+   */
+  void set_component_pressed_font_color(const char *component, Color color);
   /**
    * Set the coordinates of a component on screen.
    * @param component The component name.
@@ -365,6 +427,37 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * `thup`.
    */
   void set_touch_sleep_timeout(uint16_t timeout);
+  /**
+   * Sets which page Nextion loads when exiting sleep mode. Note this can be set even when Nextion is in sleep mode.
+   * @param page_id The page id, from 0 to the lage page in Nextion. Set 255 (not set to any existing page) to
+   * wakes up to current page.
+   *
+   * Example:
+   * ```cpp
+   * it.set_wake_up_page(2);
+   * ```
+   *
+   * The display will wake up to page 2.
+   */
+  void set_wake_up_page(uint8_t page_id = 255);
+  /**
+   * Sets if Nextion should auto-wake from sleep when touch press occurs.
+   * @param auto_wake True or false. When auto_wake is true and Nextion is in sleep mode,
+   * the first touch will only trigger the auto wake mode and not trigger a Touch Event.
+   *
+   * Example:
+   * ```cpp
+   * it.set_auto_wake_on_touch(true);
+   * ```
+   *
+   * The display will wake up by touch.
+   */
+  void set_auto_wake_on_touch(bool auto_wake);
+  /**
+   * Sets Nextion mode between sleep and awake
+   * @param True or false. Sleep=true to enter sleep mode or sleep=false to exit sleep mode.
+   */
+  void sleep(bool sleep);
 
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
@@ -488,7 +581,7 @@ class NextionSwitch : public switch_::Switch, public Component, public uart::UAR
   uint8_t page_id_;
   uint8_t component_id_;
   std::string device_id_;
-  void write_state_(bool state) override;
+  void write_state(bool state) override;
 };
 
 class NextionSensor : public sensor::Sensor, public uart::UARTDevice {
