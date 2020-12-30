@@ -361,6 +361,56 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
   return true;
 }
 
+//  0x70 0x61 0x62 0x31 0x32 0x33 0xFF 0xFF 0xFF
+//  Returned when using get command for a string.
+//  Each byte is converted to char.
+//  data: ab123
+bool Nextion::gets(const char *component_id, char *string_buffer) {
+  char command[64];
+  sprintf(command, "get %s.txt", component_id);
+  String response = "";
+  this->send_command_no_ack(command);
+  this->recv_ret_string_(response);
+
+  if (response[0] == 0x70) {
+    response.remove(0, 1);
+    strcpy(string_buffer, response.c_str());
+    ESP_LOGD(TAG, "Received gets response \"%s\" for component id %s", string_buffer, component_id);
+    return true;
+  } else {
+    ESP_LOGD(TAG, "Received unknown gets response \"%s\" for component id %s", response.c_str(), component_id);
+  }
+  return false;
+}
+
+//  0x71 0x01 0x02 0x03 0x04 0xFF 0xFF 0xFF
+//  Returned when get command to return a number
+//  4 byte 32-bit value in little endian order.
+//  (0x01+0x02*256+0x03*65536+0x04*16777216)
+//  data: 67305985
+uint32_t Nextion::getn(const char *component_id) {
+  char command[64];
+  String response = "";
+  uint32_t return_value = 0;
+
+  sprintf(command, "get %s.val", component_id);
+  this->send_command_no_ack(command);
+
+  this->recv_ret_string_(response);
+  if (response[0] == 0x71) {
+    response.remove(0, 1);
+    for (int i = 0; i < response.length(); ++i) {
+      uint32_t factor = pow(2, (i * 8));
+      uint32_t to_add = response[i] * factor;
+      return_value += to_add;
+    }
+    ESP_LOGD(TAG, "Received gets response (%d) for component id %s", return_value, component_id);
+  } else {
+    ESP_LOGD(TAG, "Received unknown gets response  \"%s\" for component id %s", response.c_str(), component_id);
+  }
+  return return_value;
+}
+
 bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
 #if defined ESP8266
   yield();

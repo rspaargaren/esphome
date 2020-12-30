@@ -583,6 +583,16 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void soft_reset();
 
+  /**
+   * will request the text of component id
+   * from the nextion
+   * @param const char *component_id Component id to get the text from
+   * @param char *string_buffer Buffer to put the text in
+   * @return true if success, false for failure.
+   */
+  bool gets(const char *component_id, char *string_buffer);
+  uint32_t getn(const char *component_id);
+
  protected:
   bool ack_();
   bool read_until_ack_();
@@ -622,6 +632,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
+
   std::vector<NextionTouchComponent *> touch_;
   std::vector<NextionSwitch *> switchtype_;
   std::vector<NextionSensor *> sensortype_;
