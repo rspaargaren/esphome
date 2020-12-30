@@ -407,7 +407,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   /**
    * Softreset the Nextion
    */
-  void softReset(void);
+  void soft_reset();
 
  protected:
   bool ack_();
@@ -419,7 +419,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param int contentLength Total size of the file
    * @return true if success, false for failure.
    */
-  bool upload_by_chunks_(int contentLength, int chunk_size = 4096);
+  bool upload_by_chunks_(int content_length, int chunk_size = 4096);
   /**
    * start update tft file to nextion.
    *
@@ -427,7 +427,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param int contentLength Total size of the file
    * @return true if success, false for failure.
    */
-  bool upload_from_stream_(Stream &myFile, int contentLength);
+  bool upload_from_stream_(Stream &my_file, int content_length);
 
   /**
    * start update tft file to nextion.
@@ -447,7 +447,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @return the length of string buffer.
    *
    */
-  uint16_t recvRetString_(String &response, uint32_t timeout = 500, bool recv_flag = false);
+  uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
   std::vector<NextionTouchComponent *> touch_;
   std::vector<NextionSwitch *> switchtype_;
   std::vector<NextionSensor *> sensortype_;
@@ -488,7 +488,7 @@ class NextionSwitch : public switch_::Switch, public Component, public uart::UAR
   uint8_t page_id_;
   uint8_t component_id_;
   std::string device_id_;
-  void write_state(bool state) override;
+  void write_state_(bool state) override;
 };
 
 class NextionSensor : public sensor::Sensor, public uart::UARTDevice {
