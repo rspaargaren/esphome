@@ -425,7 +425,9 @@ bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
     int code = http.GET();
     while (code != 200 && code != 206 && tries <= 5) {
       ESP_LOGD(TAG, "upload_by_chunks_ retrying (%d/5)", tries);
-      delay(35);
+      for (int i = 0; i < 12; ++i)  // Need a decent delay and since we will be rebooting this shouldnt be an issue.
+        delay(40);
+
       code = http.GET();
       ++tries;
     }
@@ -565,7 +567,8 @@ void Nextion::upload_tft() {
   int tries = 0;
   int code = http.GET();
   while (code != 200 && code != 206 && tries < 5) {
-    delay(35);
+    for (int i = 0; i < 12; ++i)  // Need a decent delay and since we will be rebooting this shouldnt be an issue.
+      delay(40);
     code = http.GET();
     ++tries;
   }
