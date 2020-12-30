@@ -124,17 +124,32 @@ void Nextion::add_waveform_data(int component_id, uint8_t channel_number, uint8_
 void Nextion::fill_area(int x1, int y1, int width, int height, const char *color) {
   this->send_command_printf("fill %d,%d,%d,%d,%s", x1, y1, width, height, color);
 }
+void Nextion::fill_area(int x1, int y1, int width, int height, Color color) {
+  this->send_command_printf("fill %d,%d,%d,%d,%d", x1, y1, width, height, color.to_565());
+}
 void Nextion::line(int x1, int y1, int x2, int y2, const char *color) {
   this->send_command_printf("line %d,%d,%d,%d,%s", x1, y1, x2, y2, color);
+}
+void Nextion::line(int x1, int y1, int x2, int y2, Color color) {
+  this->send_command_printf("line %d,%d,%d,%d,%d", x1, y1, x2, y2, color.to_565());
 }
 void Nextion::rectangle(int x1, int y1, int width, int height, const char *color) {
   this->send_command_printf("draw %d,%d,%d,%d,%s", x1, y1, x1 + width, y1 + height, color);
 }
+void Nextion::rectangle(int x1, int y1, int width, int height, Color color) {
+  this->send_command_printf("draw %d,%d,%d,%d,%d", x1, y1, x1 + width, y1 + height, color.to_565());
+}
 void Nextion::circle(int center_x, int center_y, int radius, const char *color) {
   this->send_command_printf("cir %d,%d,%d,%s", center_x, center_y, radius, color);
 }
+void Nextion::circle(int center_x, int center_y, int radius, Color color) {
+  this->send_command_printf("cir %d,%d,%d,%d", center_x, center_y, radius, color.to_565());
+}
 void Nextion::filled_circle(int center_x, int center_y, int radius, const char *color) {
   this->send_command_printf("cirs %d,%d,%d,%s", center_x, center_y, radius, color);
+}
+void Nextion::filled_circle(int center_x, int center_y, int radius, Color color) {
+  this->send_command_printf("cirs %d,%d,%d,%d", center_x, center_y, radius, color.to_565());
 }
 bool Nextion::read_until_ack_() {
   while (this->available() >= 4) {
