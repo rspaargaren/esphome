@@ -1,33 +1,29 @@
-import esphome.codegen as cg
+from esphome.components import text_sensor
 import esphome.config_validation as cv
-from esphome.components import sensor
+import esphome.codegen as cg
 from esphome.const import (
     CONF_COMPONENT_ID,
     CONF_PAGE_ID,
     CONF_ID,
-    UNIT_EMPTY,
-    ICON_EMPTY,
 )
 from . import nextion_ns, CONF_NEXTION_ID
-from .display import Nextion
 from .defines import CONF_VARIABLE_ID
+from .display import Nextion
 
-DEPENDENCIES = ["display"]
+NextionTextSensor = nextion_ns.class_(
+    "NextionTextSensor", text_sensor.TextSensor, cg.PollingComponent
+)
 
-NextionSensor = nextion_ns.class_("NextionSensor", sensor.Sensor, cg.PollingComponent)
-
-CONFIG_SCHEMA = (
-    sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 2)
-    .extend(
+CONFIG_SCHEMA = cv.All(
+    text_sensor.TEXT_SENSOR_SCHEMA.extend(
         {
-            cv.GenerateID(): cv.declare_id(NextionSensor),
+            cv.GenerateID(): cv.declare_id(NextionTextSensor),
             cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
             cv.Optional(CONF_PAGE_ID): cv.uint8_t,
             cv.Optional(CONF_COMPONENT_ID): cv.uint8_t,
             cv.Optional(CONF_VARIABLE_ID): cv.string,
         }
-    )
-    .extend(cv.polling_component_schema("60s"))
+    ).extend(cv.polling_component_schema("60s")),
 )
 
 
@@ -43,17 +39,10 @@ def to_code(config):
             + "{CONF_VARIABLE_ID} is used to get/poll the data from the nextion"
         )
 
-    # if CONFIG_RESTORE_FROM_NEXTION in config and config[CONFIG_RESTORE_FROM_NEXTION]:
-    #     if CONF_VARIABLE_ID not in config:
-    #         raise cv.Invalid(
-    #             "{CONF_VARIABLE_ID} is required if {CONFIG_RESTORE_FROM_NEXTION} is set"
-    #         )
     hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
-    yield sensor.register_sensor(var, config)
-
-    cg.add(hub.register_sensor_component(var))
+    yield text_sensor.register_text_sensor(var, config)
 
     if CONF_COMPONENT_ID in config:
         cg.add(var.set_component_id(config[CONF_COMPONENT_ID]))

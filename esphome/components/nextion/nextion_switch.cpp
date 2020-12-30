@@ -6,7 +6,6 @@ namespace esphome {
 namespace nextion {
 
 static const char *TAG = "nextion_switch";
-class NextionSwitch;
 
 void NextionSwitch::process(uint8_t page_id, uint8_t component_id, bool on) {
   if (this->page_id_ == page_id && this->component_id_ == component_id) {
@@ -17,7 +16,7 @@ void NextionSwitch::process(uint8_t page_id, uint8_t component_id, bool on) {
 
 void NextionSwitch::write_state(bool state) {
   this->publish_state(state);
-  this->send_command_printf("%s=%d", this->device_id_.c_str(), state);
+  this->send_command_printf("%s=%d", this->variable_id_.c_str(), state);
 }
 
 bool NextionSwitch::send_command_printf(const char *format, ...) {

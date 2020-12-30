@@ -1,4 +1,4 @@
-#include "nextion.h"
+#include "esphome/components/nextion/nextion_touch.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
 

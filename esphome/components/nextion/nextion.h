@@ -648,11 +648,5 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   char serial_number_[64];
   char flash_size_[64];
 };
-
-class NextionTouchComponent : public NextionComponent, public binary_sensor::BinarySensorInitiallyOff {
- public:
-  void process(uint8_t page_id, uint8_t component_id, bool on) override;
-};
-
 }  // namespace nextion
 }  // namespace esphome
