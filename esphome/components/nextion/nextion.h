@@ -330,7 +330,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    * Example:
    * ```cpp
-   * fill_area(50, 50, 100, 100, "17013");
+   * fill_area(50, 50, 100, 100, "RED");
    * ```
    *
    * Fills an area that starts at x coordiante `50` and y coordinate `50` with a height of `100` and width of `100` with
@@ -338,6 +338,24 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * convert color codes to Nextion HMI colors
    */
   void fill_area(int x1, int y1, int width, int height, const char *color);
+  /**
+   * Fill a rectangle with a color.
+   * @param x1 The starting x coordinate.
+   * @param y1 The starting y coordinate.
+   * @param width The width to draw.
+   * @param height The height to draw.
+   * @param color The color to draw with (as Color).
+   *
+   * Example:
+   * ```cpp
+   * fill_area(50, 50, 100, 100, color);
+   * ```
+   *
+   * Fills an area that starts at x coordiante `50` and y coordinate `50` with a height of `100` and width of `100` with
+   * the color of blue. Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to
+   * convert color codes to Nextion HMI colors
+   */
+  void fill_area(int x1, int y1, int width, int height, Color color);
   /**
    * Draw a line on the screen.
    * @param x1 The starting x coordinate.
@@ -358,6 +376,25 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void line(int x1, int y1, int x2, int y2, const char *color);
   /**
+   * Draw a line on the screen.
+   * @param x1 The starting x coordinate.
+   * @param y1 The starting y coordinate.
+   * @param x2 The ending x coordinate.
+   * @param y2 The ending y coordinate.
+   * @param color The color to draw with (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.line(50, 50, 75, 75, "17013");
+   * ```
+   *
+   * Makes a line that starts at x coordinate `50` and y coordinate `50` and ends at x coordinate `75` and y coordinate
+   * `75` with the color of blue. Use this [color
+   * picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to Nextion HMI
+   * colors.
+   */
+  void line(int x1, int y1, int x2, int y2, Color color);
+  /**
    * Draw a rectangle outline.
    * @param x1 The starting x coordinate.
    * @param y1 The starting y coordinate.
@@ -377,6 +414,25 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    */
   void rectangle(int x1, int y1, int width, int height, const char *color);
   /**
+   * Draw a rectangle outline.
+   * @param x1 The starting x coordinate.
+   * @param y1 The starting y coordinate.
+   * @param width The width of the rectangle.
+   * @param height The height of the rectangle.
+   * @param color The color to draw with (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.rectangle(25, 35, 40, 50, "17013");
+   * ```
+   *
+   * Makes a outline of a rectangle that starts at x coordinate `25` and y coordinate `35` and has a width of `40` and a
+   * length of `50` with color of blue. Use this [color
+   * picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to Nextion HMI
+   * colors.
+   */
+  void rectangle(int x1, int y1, int width, int height, Color color);
+  /**
    * Draw a circle outline
    * @param center_x The center x coordinate.
    * @param center_y The center y coordinate.
@@ -384,6 +440,14 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param color The color to draw with (as a string).
    */
   void circle(int center_x, int center_y, int radius, const char *color);
+  /**
+   * Draw a circle outline
+   * @param center_x The center x coordinate.
+   * @param center_y The center y coordinate.
+   * @param radius The circle radius.
+   * @param color The color to draw with (as Color).
+   */
+  void circle(int center_x, int center_y, int radius, Color color);
   /**
    * Draw a filled circled.
    * @param center_x The center x coordinate.
@@ -401,6 +465,23 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * Nextion HMI colors.
    */
   void filled_circle(int center_x, int center_y, int radius, const char *color);
+  /**
+   * Draw a filled circled.
+   * @param center_x The center x coordinate.
+   * @param center_y The center y coordinate.
+   * @param radius The circle radius.
+   * @param color The color to draw with (as Color).
+   *
+   * Example:
+   * ```cpp
+   * it.filled_cricle(25, 25, 10, color);
+   * ```
+   *
+   * Makes a filled circle at the x cordinates `25` and y coordinate `25` with a radius of `10` with a color of blue.
+   * Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to
+   * Nextion HMI colors.
+   */
+  void filled_circle(int center_x, int center_y, int radius, Color color);
 
   /** Set the brightness of the backlight.
    *
