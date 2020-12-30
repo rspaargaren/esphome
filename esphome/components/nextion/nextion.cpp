@@ -298,7 +298,7 @@ bool Nextion::read_until_ack_() {
         }
         uint8_t page_id = data[0];
         uint8_t component_id = data[1];
-        uint8_t touch_event = data[2];  // 0 -> release, 1 -> press
+        uint8_t touch_event = data[2];
         ESP_LOGD(TAG, "Got special state 0x91 page=%u component=%u type=%u", page_id, component_id, touch_event);
         for (auto *sensor : this->sensortype_) {
           sensor->process_sensor(page_id, component_id, touch_event);
