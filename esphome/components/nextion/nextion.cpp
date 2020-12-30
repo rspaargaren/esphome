@@ -304,7 +304,7 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc5=%u", time.second);
 }
 #endif
-bool Nextion::upload_from_stream_(Stream &myFile, int contentLength) {
+bool Nextion::upload_from_stream(Stream &my_file, int content_length) {
 #if defined ESP8266
   yield();
 #endif
@@ -312,11 +312,11 @@ bool Nextion::upload_from_stream_(Stream &myFile, int contentLength) {
   // create buffer for read
   uint8_t buff[2048] = {0};
   // read all data from server
-  while (contentLength > 0) {
+  while (content_length > 0) {
     // get available data size
-    size_t size = myFile.available();
+    size_t size = my_file.available();
     if (size) {
-      int c = myFile.readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+      int c = my_file.readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
       if (this->debug_print_)
         ESP_LOGD(TAG, "upload_from_stream_ sending %d bytes : total %d", c, this->total_);
       // Write the buffered bytes to the nextion. If this fails, return false.
@@ -324,8 +324,8 @@ bool Nextion::upload_from_stream_(Stream &myFile, int contentLength) {
         return false;
       }
 
-      if (contentLength > 0) {
-        contentLength -= c;
+      if (content_length > 0) {
+        content_length -= c;
       }
     }
     delay(1);
@@ -386,21 +386,21 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
   return true;
 }
 
-bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
+bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
   if (this->debug_print_)
-    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", contentLength, chunk_size);
+    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, chunk_size);
 
-  for (int range_start = 0; range_start < contentLength; range_start += chunk_size) {
+  for (int range_start = 0; range_start < content_length; range_start += chunk_size) {
     int range_end = range_start + chunk_size - 1;
-    if (range_end > contentLength)
-      range_end = contentLength;
+    if (range_end > content_length)
+      range_end = content_length;
 
     HTTPClient http;
     if (!http.begin(this->tft_url_.c_str())) {
       ESP_LOGD(TAG, "upload_by_chunks_: connection failed");
       return false;
     }
-    char rangeHeader[64];
+    char range_header[64];
     sprintf(rangeHeader, "bytes=%d-%d", range_start, range_end);
 
     http.addHeader("Range", rangeHeader);
@@ -413,7 +413,7 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
     int code = http.GET();
     while (code != 200 && code != 206 && tries <= 5) {
       ESP_LOGD(TAG, "upload_by_chunks_ retrying (%d/5)", tries);
-      delay(200);
+      delay(35);
       code = http.GET();
       ++tries;
     }
@@ -435,7 +435,7 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
     http.end();  // End this HTTP call because we read all the data
   }
 
-  if (contentLength % 4096 != 0) {  // If not in 4096 chunks wait for the last bits to confirm
+  if (content_length % 4096 != 0) {  // If not in 4096 chunks wait for the last bits to confirm
     String string = String("");
     uint8_t timeout = 0;
     this->recvRetString_(string, 500, true);
@@ -454,19 +454,18 @@ bool Nextion::upload_by_chunks_(int contentLength, int chunk_size) {
       timeout++;
     }
   }
-  delay(100);
 
   return true;
 }
 
-uint16_t Nextion::recvRetString_(String &response, uint32_t timeout, bool recv_flag) {
+uint16_t Nextion::recv_ret_string(String &response, uint32_t timeout, bool recv_flag) {
 #if defined ESP8266
   yield();
 #endif
 
   uint16_t ret = 0;
   uint8_t c = 0;
-  uint8_t nr_of_FF_bytes = 0;
+  uint8_t nr_of_ff_bytes = 0;
   long start;
   bool exit_flag = false;
   bool ff_flag = false;
@@ -512,7 +511,7 @@ uint16_t Nextion::recvRetString_(String &response, uint32_t timeout, bool recv_f
   return ret;
 }
 
-void Nextion::softReset(void) { this->send_command_no_ack("rest"); }
+void Nextion::soft_reset() { this->send_command_no_ack("rest"); }
 
 void Nextion::upload_tft() {
   int old_baud = this->parent_->get_baud_rate();
@@ -545,7 +544,7 @@ void Nextion::upload_tft() {
     ESP_LOGD(TAG, "Connected");
   }
   http.addHeader("Range", "bytes=0-255");
-  const char *headerNames[] = {"Content-Range"};
+  const char *header_names[] = {"Content-Range"};
   http.collectHeaders(headerNames, 1);
   ESP_LOGD(TAG, "Requesting URL: %s", this->tft_url_.c_str());
 
@@ -554,7 +553,7 @@ void Nextion::upload_tft() {
   int tries = 0;
   int code = http.GET();
   while (code != 200 && code != 206 && tries < 5) {
-    delay(200);
+    delay(35);
     code = http.GET();
     ++tries;
   }
@@ -562,7 +561,7 @@ void Nextion::upload_tft() {
   if (code == 200 || code == 206) {
     String content_range_string = http.header("Content-Range");
     content_range_string.remove(0, 12);
-    int contentLength = content_range_string.toInt();
+    int content_length = content_range_string.toInt();
     http.end();  // End this HTTP call because we read all the data
     delay(2);
 
@@ -589,7 +588,7 @@ void Nextion::upload_tft() {
     }
     ESP_LOGD(TAG, "Start upload. File size is: %d bytes", contentLength);
     // Upload the received byte Stream to the nextion
-    result = this->upload_by_chunks_(contentLength);
+    result = this->upload_by_chunks_(content_length);
 
     if (result) {
       ESP_LOGD(TAG, "Succesfully updated Nextion! Sleep for 1600ms");
@@ -603,7 +602,8 @@ void Nextion::upload_tft() {
     // end: wait(delay) for the nextion to finish the update process, send
     // nextion reset command and end the serial connection to the nextion
     // wait for the nextion to finish internal processes
-    delay(1600);
+    delay(45);
+    delay(45);
 
     // soft reset the nextion
     this->softReset();
@@ -647,7 +647,7 @@ void NextionSwitch::process(uint8_t page_id, uint8_t component_id, bool on) {
   }
 }
 
-void NextionSwitch::write_state(bool state) {
+void NextionSwitch::write_state_(bool state) {
   this->publish_state(state);
   this->send_command_printf("%s=%d", this->device_id_.c_str(), state);
 }
