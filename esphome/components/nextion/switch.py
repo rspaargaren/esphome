@@ -27,17 +27,17 @@ CONFIG_SCHEMA = cv.All(
     )
     .extend(cv.COMPONENT_SCHEMA)
     .extend(uart.UART_DEVICE_SCHEMA),
-    cv.has_at_least_one_key(CONF_BUTTON_ID, CONF_VARIABLE_ID),
+    cv.has_exactly_one_key(CONF_BUTTON_ID, CONF_VARIABLE_ID),
 )
 
 
 def to_code(config):
-    var = cg.new_Pvariable(config[CONF_ID])
+    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
+    var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
     yield switch.register_switch(var, config)
     yield uart.register_uart_device(var, config)
 
-    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     cg.add(hub.register_switch_component(var))
 
     cg.add(var.set_component_id(config[CONF_COMPONENT_ID]))
