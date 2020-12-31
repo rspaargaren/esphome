@@ -3,9 +3,6 @@
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
-#include "esphome/components/binary_sensor/binary_sensor.h"
-#include "esphome/components/switch/switch.h"
-#include "esphome/components/sensor/sensor.h"
 #include "esphome/components/nextion/nextion_component.h"
 #include "esphome/core/color.h"
 #include <HTTPClient.h>
@@ -544,6 +541,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   void register_touch_component(NextionComponent *obj) { this->touch_.push_back(obj); }
   void register_switch_component(NextionComponent *obj) { this->switchtype_.push_back(obj); }
   void register_sensor_component(NextionComponent *obj) { this->sensortype_.push_back(obj); }
+  void register_textsensor_component(NextionComponent *obj) { this->textsensortype_.push_back(obj); }
+
   void setup() override;
   void set_brightness(float brightness) { this->brightness_ = brightness; }
   float get_setup_priority() const override;
@@ -631,10 +630,11 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
-
+  uint32_t nextion_71_to_uint32(String data);
   std::vector<NextionComponent *> touch_;
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;
+  std::vector<NextionComponent *> textsensortype_;
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};

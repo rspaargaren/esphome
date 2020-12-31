@@ -7,36 +7,28 @@ namespace nextion {
 
 static const char *TAG = "nextion_switch";
 
-void NextionSwitch::process(uint8_t page_id, uint8_t component_id, bool on) {
-  if (this->page_id_ == page_id && this->component_id_ == component_id) {
+void NextionSwitch::nextion_setup() {
+  if (this->get_update_interval() == -1)
+    this->update();
+}
+
+void NextionSwitch::process_bool(char *variable_name, bool on) {
+  if (this->variable_name_ == variable_name) {
     this->publish_state(on);
-    ESP_LOGW(TAG, "Switch state published");
+    ESP_LOGD(TAG, "Processed switch \"%s\" state %s", variable_name, state ? "ON" : "OFF");
   }
+}
+
+void NextionSwitch::update() {
+  uint32_t state = this->nextion_->getn(this->variable_name_to_send_.c_str());
+  this->publish_state(state == 0 ? false : true);
+  ESP_LOGD(TAG, "Updated switch \"%s\" state %s", this->variable_name_.c_str(), state ? "ON" : "OFF");
 }
 
 void NextionSwitch::write_state(bool state) {
   this->publish_state(state);
-  this->send_command_printf("%s=%d", this->variable_id_.c_str(), state);
-}
-
-bool NextionSwitch::send_command_printf(const char *format, ...) {
-  char buffer[256];
-  va_list arg;
-  va_start(arg, format);
-  int ret = vsnprintf(buffer, sizeof(buffer), format, arg);
-  va_end(arg);
-  if (ret <= 0) {
-    ESP_LOGW(TAG, "Building command for format '%s' failed!", format);
-    return false;
-  }
-  this->send_command_no_ack(buffer);
-  return true;
-}
-
-void NextionSwitch::send_command_no_ack(const char *command) {
-  this->write_str(command);
-  const uint8_t data[3] = {0xFF, 0xFF, 0xFF};
-  this->write_array(data, sizeof(data));
+  this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
+  ESP_LOGD(TAG, "Updated switch \"%s\" state %s", this->variable_name_.c_str(), state ? "ON" : "OFF");
 }
 
 }  // namespace nextion
