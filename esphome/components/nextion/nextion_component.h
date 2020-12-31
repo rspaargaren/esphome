@@ -22,12 +22,14 @@ class NextionComponent {
       variable_name_to_send_ = variable_name_to_send;
     }
   }
+  void set_print_debug(bool print_debug) { this->print_debug_ = print_debug; }
 
  protected:
   uint8_t page_id_;
   uint8_t component_id_;
   std::string variable_name_;
   std::string variable_name_to_send_;
+  bool print_debug_ = false;
 };
 }  // namespace nextion
 }  // namespace esphome

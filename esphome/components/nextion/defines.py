@@ -1,3 +1,5 @@
 CONF_VARIABLE_NAME = "variable_name"
 CONF_BUTTON_ID = "button_id"
 CONF_COMPONENT_NAME = "component_name"
+CONF_ON_SLEEP = "on_sleep"
+CONF_ON_WAKE = "on_wake"

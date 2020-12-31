@@ -14,7 +14,8 @@ void NextionTextSensor::nextion_setup() {
 void NextionTextSensor::process_text(char *variable_name, char *text_value) {
   if (this->variable_name_ == variable_name) {
     this->publish_state(text_value);
-    ESP_LOGD(TAG, "Processed text_sensor \"%s\" state \"%s\"", variable_name, text_value);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Processed text_sensor \"%s\" state \"%s\"", variable_name, text_value);
   }
 }
 
@@ -22,10 +23,11 @@ void NextionTextSensor::update() {
   char buffer[256];
   if (this->nextion_->gets(this->variable_name_to_send_.c_str(), buffer)) {
     this->publish_state(buffer);
-    ESP_LOGD(TAG, "Updated text_sensor \"%s\" state \"%s\"", this->variable_name_.c_str(), buffer);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Updated text_sensor \"%s\" state \"%s\"", this->variable_name_.c_str(), buffer);
   } else {
     this->publish_state("");
-    ESP_LOGD(TAG, "Updated text_sensor \"%s\" state \"\"", this->variable_name_.c_str());
+    ESP_LOGD(TAG, "ERROR: Updated text_sensor \"%s\" state \"\"", this->variable_name_.c_str());
     return;
   }
 }
@@ -33,7 +35,8 @@ void NextionTextSensor::update() {
 void NextionTextSensor::write_state(std::string state) {
   this->nextion_->send_command_printf("%s=\"%s\"", this->variable_name_to_send_.c_str(), state.c_str());
   this->publish_state(state);
-  ESP_LOGD(TAG, "Wrote state for text_sensor \"%s\" state \"%s\"", this->variable_name_.c_str(), state.c_str());
+  if (this->print_debug_)
+    ESP_LOGD(TAG, "Wrote state for text_sensor \"%s\" state \"%s\"", this->variable_name_.c_str(), state.c_str());
 }
 
 }  // namespace nextion
