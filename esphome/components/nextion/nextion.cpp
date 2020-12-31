@@ -510,7 +510,7 @@ uint32_t Nextion::getn(const char *component_id) {
   return return_value;
 }
 
-uint32_t Nextion::nextion_71_to_uint32(String data) {
+uint32_t Nextion::nextion_71_to_uint32_(String data) {
   uint32_t return_value = 0;
   for (int i = 0; i < data.length(); ++i) {
     uint32_t factor = pow(2, (i * 8));

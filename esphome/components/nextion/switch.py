@@ -6,8 +6,6 @@ from . import nextion_ns, CONF_NEXTION_ID
 from .display import Nextion
 from .defines import CONF_VARIABLE_NAME, CONF_COMPONENT_NAME
 
-DEPENDENCIES = ["display"]
-
 
 NextionSwitch = nextion_ns.class_("NextionSwitch", switch.Switch, cg.PollingComponent)
 

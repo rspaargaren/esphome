@@ -10,7 +10,6 @@ from . import nextion_ns, CONF_NEXTION_ID
 from .display import Nextion
 from .defines import CONF_VARIABLE_NAME, CONF_COMPONENT_NAME
 
-DEPENDENCIES = ["display"]
 
 NextionSensor = nextion_ns.class_("NextionSensor", sensor.Sensor, cg.PollingComponent)
 

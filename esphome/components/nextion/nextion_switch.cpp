@@ -1,4 +1,4 @@
-#include "esphome/components/nextion/nextion_switch.h"
+#include "nextion_switch.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
 

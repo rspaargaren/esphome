@@ -1,7 +1,5 @@
 #pragma once
 
-#include "esphome/core/component.h"
-#include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/nextion/nextion_component.h"
 #include "esphome/core/color.h"
@@ -650,7 +648,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
-  uint32_t nextion_71_to_uint32(String data);
+  uint32_t nextion_71_to_uint32_(String data);
   std::vector<NextionComponent *> touch_;
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;

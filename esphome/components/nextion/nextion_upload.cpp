@@ -141,7 +141,7 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
 
   uint16_t ret = 0;
   uint8_t c = 0;
-  uint8_t nr_of_FF_bytes = 0;
+  uint8_t nr_of_ff_bytes = 0;
   long start;
   bool exit_flag = false;
   bool ff_flag = false;
@@ -158,13 +158,13 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
       }
 
       if (c == 0xFF)
-        nr_of_FF_bytes++;
+        nr_of_ff_bytes++;
       else {
-        nr_of_FF_bytes = 0;
+        nr_of_ff_bytes = 0;
         ff_flag = false;
       }
 
-      if (nr_of_FF_bytes >= 3)
+      if (nr_of_ff_bytes >= 3)
         ff_flag = true;
 
       response += (char) c;
