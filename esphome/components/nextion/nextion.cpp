@@ -33,6 +33,19 @@ void Nextion::setup() {
   }
 }
 
+void Nextion::set_print_debug(bool print_debug) {
+  this->print_debug_ = print_debug;
+  for (auto *sensortype : this->sensortype_) {
+    sensortype->set_print_debug(print_debug);
+  }
+  for (auto *switchtype : this->switchtype_) {
+    switchtype->set_print_debug(print_debug);
+  }
+  for (auto *textsensortype : this->textsensortype_) {
+    textsensortype->set_print_debug(print_debug);
+  }
+}
+
 void Nextion::dump_config() {
   ESP_LOGCONFIG(TAG, "Nextion:");
   ESP_LOGCONFIG(TAG, "  Baud Rate:        %d", this->parent_->get_baud_rate());
@@ -48,6 +61,15 @@ void Nextion::update() {
     (*this->writer_)(*this);
   }
 }
+
+void Nextion::add_sleep_state_callback(std::function<void(bool)> &&callback) {
+  this->sleep_callback_.add(std::move(callback));
+}
+
+void Nextion::add_wake_state_callback(std::function<void(bool)> &&callback) {
+  this->wake_callback_.add(std::move(callback));
+}
+
 void Nextion::send_command_no_ack(const char *command) {
   // Flush RX...
   this->loop();
@@ -276,11 +298,18 @@ bool Nextion::read_until_ack_() {
         ESP_LOGD(TAG, "Got touch at x=%u y=%u type=%s", x, y, touch_event ? "PRESS" : "RELEASE");
         break;
       }
-      case 0x66:  // sendme page id
-      case 0x70:  // string variable data return
-      case 0x71:  // numeric variable data return
-      case 0x86:  // device automatically enters into sleep mode
+      case 0x66:    // sendme page id
+      case 0x70:    // string variable data return
+      case 0x71:    // numeric variable data return
+      case 0x86: {  // device automatically enters into sleep mode
+        this->sleep_callback_.call(true);
+        break;
+      }
       case 0x87:  // device automatically wakes up
+      {
+        this->wake_callback_.call(true);
+        break;
+      }
       case 0x88:  // system successful start up
       case 0x89:  // start SD card upgrade
       // Data from nextion is
@@ -290,10 +319,6 @@ bool Nextion::read_until_ack_() {
       // 00/01 - Single byte for on/off
       // FF FF FF - End
       case 0x90: {  // Switched component
-        // if (data_length != 3) {
-        //   invalid_data_length = true;
-        //   break;
-        // }
         char variable_name[64];
         uint8_t variable_name_end = 0;
 
@@ -406,7 +431,7 @@ bool Nextion::read_until_ack_() {
         break;
     }
     if (invalid_data_length) {
-      ESP_LOGW(TAG, "Invalid data length (%d) from nextion!", data_length);
+      ESP_LOGW(TAG, "Event: %d , invalid data length (%d) from nextion!", event, data_length);
       for (int index = 0; index < data_length; ++index) {
         ESP_LOGD("nextion loop invalid_data_length", "data[%d] %d", index, data[index]);
       }
@@ -445,7 +470,8 @@ bool Nextion::gets(const char *component_id, char *string_buffer) {
   if (response[0] == 0x70) {
     response.remove(0, 1);
     strcpy(string_buffer, response.c_str());
-    ESP_LOGD(TAG, "Received gets response \"%s\" for component id %s", string_buffer, component_id);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Received gets response \"%s\" for component id %s", string_buffer, component_id);
     return true;
   } else {
     ESP_LOGD(TAG, "Received unknown gets response \"%s\" for component id %s", response.c_str(), component_id);
@@ -476,7 +502,8 @@ uint32_t Nextion::getn(const char *component_id) {
       return_value += to_add;
     }
 
-    ESP_LOGD(TAG, "Received getn response (%d) for component id %s", return_value, component_id);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Received getn response (%d) for component id %s", return_value, component_id);
   } else {
     ESP_LOGD(TAG, "Received unknown getn response \"%s\" for component id %s", response.c_str(), component_id);
   }

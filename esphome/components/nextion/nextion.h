@@ -14,7 +14,6 @@
 namespace esphome {
 namespace nextion {
 
-class NextionTouchComponent;
 class Nextion;
 
 using nextion_writer_t = std::function<void(Nextion &)>;
@@ -589,9 +588,30 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @return true if success, false for failure.
    */
   bool gets(const char *component_id, char *string_buffer);
+  /**
+   * will request the an integer of component id
+   * from the nextion
+   * @param const char *component_id Component id to get the text from
+   * @return uint32_t of the components val
+   */
   uint32_t getn(const char *component_id);
 
+  /** Add a callback to be notified of sleep state changes.
+   *
+   * @param callback The void(bool) callback.
+   */
+  void add_sleep_state_callback(std::function<void(bool)> &&callback);
+
+  /** Add a callback to be notified of wake state changes.
+   *
+   * @param callback The void(bool) callback.
+   */
+  void add_wake_state_callback(std::function<void(bool)> &&callback);
+
+  void set_print_debug(bool print_debug);
+
  protected:
+  bool print_debug_ = false;
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
@@ -635,6 +655,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;
   std::vector<NextionComponent *> textsensortype_;
+  CallbackManager<void(bool)> sleep_callback_{};
+  CallbackManager<void(bool)> wake_callback_{};
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
@@ -642,7 +664,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   int total_ = 0;
   int sent_packets_ = 0;
   bool has_updated_ = false;
-  bool debug_print_ = false;
+
   char device_model_[64];
   char firmware_version_[64];
   char serial_number_[64];
