@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
 from esphome.components import display, uart
-from esphome.core import CORE, coroutine
+from esphome.core import coroutine
 from esphome.const import (
     CONF_ID,
     CONF_LAMBDA,
@@ -13,7 +13,8 @@ from . import nextion_ns
 from .defines import CONF_ON_SLEEP, CONF_ON_WAKE
 
 DEPENDENCIES = ["uart", "network"]
-AUTO_LOAD = ["binary_sensor", "switch", "sensor"]
+AUTO_LOAD = ["binary_sensor", "switch", "sensor", "text_sensor"]
+
 CONF_HTTP_REQUEST_ID = "http_request_id"
 CONF_TFT_URL = "tft_url"
 

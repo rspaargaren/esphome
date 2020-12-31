@@ -5,7 +5,6 @@ from esphome.const import CONF_COMPONENT_ID, CONF_PAGE_ID, CONF_ID
 from . import nextion_ns, CONF_NEXTION_ID
 from .display import Nextion
 
-DEPENDENCIES = ["display"]
 
 NextionTouchComponent = nextion_ns.class_(
     "NextionTouchComponent", binary_sensor.BinarySensor

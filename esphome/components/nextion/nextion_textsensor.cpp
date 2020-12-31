@@ -1,4 +1,4 @@
-#include "esphome/components/nextion/nextion_textsensor.h"
+#include "nextion_textsensor.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
 

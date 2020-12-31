@@ -2,7 +2,6 @@ from esphome.components import text_sensor
 import esphome.config_validation as cv
 import esphome.codegen as cg
 from esphome.const import CONF_ID
-
 from . import nextion_ns, CONF_NEXTION_ID
 from .defines import CONF_COMPONENT_NAME, CONF_VARIABLE_NAME
 from .display import Nextion
