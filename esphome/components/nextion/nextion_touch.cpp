@@ -6,7 +6,7 @@ namespace esphome {
 namespace nextion {
 
 static const char *TAG = "nextion_touch";
-class NextionTouch;
+void NextionTouchComponent::nextion_setup() {}
 
 void NextionTouchComponent::process(uint8_t page_id, uint8_t component_id, bool on) {
   if (this->page_id_ == page_id && this->component_id_ == component_id) {

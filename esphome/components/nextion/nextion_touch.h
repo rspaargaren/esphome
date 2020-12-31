@@ -10,6 +10,7 @@ class NextionTouchComponent;
 class NextionTouchComponent : public NextionComponent, public binary_sensor::BinarySensorInitiallyOff {
  public:
   void process(uint8_t page_id, uint8_t component_id, bool on) override;
+  void nextion_setup() override;
 };
 }  // namespace nextion
 }  // namespace esphome
