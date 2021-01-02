@@ -15,7 +15,6 @@ from .defines import CONF_ON_SLEEP, CONF_ON_WAKE
 DEPENDENCIES = ["uart", "network"]
 AUTO_LOAD = ["binary_sensor", "switch", "sensor", "text_sensor"]
 
-CONF_HTTP_REQUEST_ID = "http_request_id"
 CONF_TFT_URL = "tft_url"
 
 Nextion = nextion_ns.class_("Nextion", cg.PollingComponent, uart.UARTDevice)

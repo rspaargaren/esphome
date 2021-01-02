@@ -21,7 +21,7 @@ void NextionTextSensor::process_text(char *variable_name, char *text_value) {
 
 void NextionTextSensor::update() {
   char buffer[256];
-  if (this->nextion_->gets(this->variable_name_to_send_.c_str(), buffer)) {
+  if (this->nextion_->get_string(this->variable_name_to_send_.c_str(), buffer)) {
     this->publish_state(buffer);
     if (this->print_debug_)
       ESP_LOGD(TAG, "Updated text_sensor \"%s\" state \"%s\"", this->variable_name_.c_str(), buffer);

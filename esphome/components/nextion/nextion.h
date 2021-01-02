@@ -585,14 +585,14 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param char *string_buffer Buffer to put the text in
    * @return true if success, false for failure.
    */
-  bool gets(const char *component_id, char *string_buffer);
+  bool get_string(const char *component_id, char *string_buffer);
   /**
    * will request the an integer of component id
    * from the nextion
    * @param const char *component_id Component id to get the text from
    * @return uint32_t of the components val
    */
-  uint32_t getn(const char *component_id);
+  uint32_t get_int(const char *component_id);
 
   /** Add a callback to be notified of sleep state changes.
    *
@@ -619,7 +619,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param int contentLength Total size of the file
    * @return true if success, false for failure.
    */
-  bool upload_by_chunks_(int content_length, int chunk_size = 4096);
+  bool upload_by_chunks_(int content_length);
   /**
    * start update tft file to nextion.
    *
@@ -667,6 +667,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   char firmware_version_[64];
   char serial_number_[64];
   char flash_size_[64];
+  uint32_t chunk_size_ = 8192;
+  uint8_t *transfer_buffer{nullptr};
 };
 }  // namespace nextion
 }  // namespace esphome
