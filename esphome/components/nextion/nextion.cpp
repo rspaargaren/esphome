@@ -460,7 +460,7 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
 //  Returned when using get command for a string.
 //  Each byte is converted to char.
 //  data: ab123
-bool Nextion::gets(const char *component_id, char *string_buffer) {
+bool Nextion::get_string(const char *component_id, char *string_buffer) {
   char command[64];
   sprintf(command, "get %s", component_id);
   String response = "";
@@ -484,7 +484,7 @@ bool Nextion::gets(const char *component_id, char *string_buffer) {
 //  4 byte 32-bit value in little endian order.
 //  (0x01+0x02*256+0x03*65536+0x04*16777216)
 //  data: 67305985
-uint32_t Nextion::getn(const char *component_id) {
+uint32_t Nextion::get_int(const char *component_id) {
   char command[64];
   String response = "";
   uint32_t return_value = 0;

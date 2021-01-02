@@ -53,19 +53,19 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
       // update sent packets counter
       this->sent_packets_++;
       this->total_++;
-      delayMicroseconds(100);
+      // delayMicroseconds(100);
     }
   }
 
   return true;
 }
 
-bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
+bool Nextion::upload_by_chunks_(int content_length) {
   if (this->print_debug_)
-    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, chunk_size);
+    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, this->chunk_size_);
 
-  for (int range_start = 0; range_start < content_length; range_start += chunk_size) {
-    int range_end = range_start + chunk_size - 1;
+  for (int range_start = 0; range_start < content_length; range_start += this->chunk_size_) {
+    int range_end = range_start + this->chunk_size_ - 1;
     if (range_end > content_length)
       range_end = content_length;
 
@@ -82,7 +82,6 @@ bool Nextion::upload_by_chunks_(int content_length, int chunk_size) {
     if (this->print_debug_)
       ESP_LOGD(TAG, "upload_by_chunks_ Requesting range: %s", range_header);
 
-    // http.setReuse(true);
     int tries = 1;
     int code = http.GET();
     while (code != 200 && code != 206 && tries <= 5) {
@@ -190,29 +189,52 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
 #if defined ESP8266
   yield();
 #endif
+  // Anything over 65K seems to cause uart issues
+  int mysize = this->chunk_size_ > 65536 ? 65536 : this->chunk_size_;
 
-  // create buffer for read
-  uint8_t buff[2048] = {0};
-  // read all data from server
+  if (this->transfer_buffer == nullptr) {
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
+    this->transfer_buffer = (uint8_t *) malloc(mysize);
+    if (!this->transfer_buffer) {
+      ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d", mysize);
+      return false;
+    }
+  }
+
+  int dosend = 0;
+  int start = millis();
+
   while (content_length > 0) {
-    // get available data size
     size_t size = my_file.available();
     if (size) {
-      int c = my_file.readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-      if (this->print_debug_)
-        ESP_LOGD(TAG, "upload_from_stream_ sending %d bytes : total %d", c, this->total_);
-      // Write the buffered bytes to the nextion. If this fails, return false.
-      if (!this->upload_from_buffer_(buff, c)) {
-        return false;
+      if (dosend + size >= mysize) {
+        if (this->print_debug_)
+          ESP_LOGD(TAG, "upload_from_stream_ write_array %d %d", dosend, size);
+        if (!this->upload_from_buffer_(transfer_buffer, dosend)) {
+          return false;
+        }
+        dosend = 0;
       }
-
+      int c = my_file.readBytes(&transfer_buffer[dosend], ((size > mysize) ? mysize : size));
+      // if (this->print_debug_)
+      //   ESP_LOGD(TAG, "upload_from_stream_ sending %d bytes : total %d", c, this->total_);
+      dosend += c;
       if (content_length > 0) {
         content_length -= c;
       }
     }
-    delay(1);
   }
-
+  if (dosend != 0) {
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "upload_from_stream_ sending last few packets %d bytes : total %d", dosend, this->total_);
+    if (!this->upload_from_buffer_(transfer_buffer, dosend)) {
+      return false;
+    }
+  }
+  uint32_t end = millis() - start;
+  uint32_t realms = (this->chunk_size_ * 1000) / end;
+  ESP_LOGD(TAG, "upload_from_stream_ %d bytes in %d ms, %d  bytes/sec", this->total_, end, realms);
   return true;
 }
 void Nextion::upload_tft() {
@@ -232,7 +254,13 @@ void Nextion::upload_tft() {
     return;
   }
 
-  ESP_LOGD(TAG, "Updating tft from : %s", this->tft_url_.c_str());
+  // This controls the range got from the webserver and the transfer buffer
+  int chunk = ((ESP.getFreeHeap()) * .5) / 4096;
+
+  this->chunk_size_ = chunk * 4096;
+  ESP_LOGD(TAG, "Heap Size %d", ESP.getFreeHeap());
+
+  ESP_LOGD(TAG, "Updating tft from : %s : using %d chunksize", this->tft_url_.c_str(), this->chunk_size_);
 
   this->is_updating_ = true;
   this->total_ = 0;

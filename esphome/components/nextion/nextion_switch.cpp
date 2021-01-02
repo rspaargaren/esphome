@@ -21,7 +21,7 @@ void NextionSwitch::process_bool(char *variable_name, bool on) {
 }
 
 void NextionSwitch::update() {
-  uint32_t state = this->nextion_->getn(this->variable_name_to_send_.c_str());
+  uint32_t state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
   this->publish_state(state == 0 ? false : true);
   if (this->print_debug_)
     ESP_LOGD(TAG, "Updated switch \"%s\" state %s", this->variable_name_.c_str(), state ? "ON" : "OFF");
