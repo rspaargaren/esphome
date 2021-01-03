@@ -11,8 +11,9 @@ class NextionTextSensor : public NextionComponent, public text_sensor::TextSenso
  public:
   NextionTextSensor(Nextion *nextion) { this->nextion_ = nextion; }
   void process_text(char *variable_name, char *text_value) override;
+  void update_component() override { this->update(); }
   void update() override;
-  void write_state(std::string state);
+  void set_state(std::string state);
   void nextion_setup() override;
 
  protected:

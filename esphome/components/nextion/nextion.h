@@ -1,5 +1,6 @@
 #pragma once
 
+#include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/components/nextion/nextion_component.h"
 #include "esphome/core/color.h"
@@ -607,9 +608,12 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   void add_wake_state_callback(std::function<void(bool)> &&callback);
 
   void set_print_debug(bool print_debug);
+  void set_current_page(uint8_t current_page) { current_page_ = current_page; }
+  void refresh_nextion_onpage(bool refresh_nextion_onpage) { refresh_nextion_onpage_ = refresh_nextion_onpage; }
+  bool has_setup_ = false;
 
  protected:
-  bool print_debug_ = false;
+  bool print_debug_ = true;
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
@@ -648,6 +652,11 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
+
+  void update_all_components();
+
+  void upload_end_();
+
   uint32_t nextion_71_to_uint32_(String data);
   std::vector<NextionComponent *> touch_;
   std::vector<NextionComponent *> switchtype_;
@@ -655,20 +664,21 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   std::vector<NextionComponent *> textsensortype_;
   CallbackManager<void(bool)> sleep_callback_{};
   CallbackManager<void(bool)> wake_callback_{};
+
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
   float brightness_{1.0};
   std::string tft_url_;
   int total_ = 0;
   int sent_packets_ = 0;
-  bool has_updated_ = false;
-
+  bool refresh_nextion_onpage_ = true;
+  uint8_t current_page_ = 0;
   char device_model_[64];
   char firmware_version_[64];
   char serial_number_[64];
   char flash_size_[64];
   uint32_t chunk_size_ = 8192;
-  uint8_t *transfer_buffer{nullptr};
+  uint8_t *transfer_buffer_{nullptr};
 };
 }  // namespace nextion
 }  // namespace esphome

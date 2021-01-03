@@ -21,6 +21,7 @@ void Nextion::setup() {
   this->send_command_printf("bkcmd=3");
   this->set_backlight_brightness(static_cast<uint8_t>(brightness_ * 100));
   this->goto_page("0");
+  this->has_setup_ = true;
 
   for (auto *sensortype : this->sensortype_) {
     sensortype->nextion_setup();
@@ -92,6 +93,19 @@ bool Nextion::ack_() {
   }
   return true;
 }
+
+void Nextion::update_all_components() {
+  for (auto *sensortype : this->sensortype_) {
+    sensortype->update_component();
+  }
+  for (auto *switchtype : this->switchtype_) {
+    switchtype->update_component();
+  }
+  for (auto *textsensortype : this->textsensortype_) {
+    textsensortype->update_component();
+  }
+}
+
 void Nextion::set_component_text(const char *component, const char *text) {
   this->send_command_printf("%s.txt=\"%s\"", component, text);
 }
@@ -445,7 +459,7 @@ void Nextion::loop() {
     this->read_until_ack_();
   }
 }
-#ifdef USE_TIME
+//#ifdef USE_TIME
 void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc0=%u", time.year);
   this->send_command_printf("rtc1=%u", time.month);
@@ -454,7 +468,7 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc4=%u", time.minute);
   this->send_command_printf("rtc5=%u", time.second);
 }
-#endif
+//#endif
 
 //  0x70 0x61 0x62 0x31 0x32 0x33 0xFF 0xFF 0xFF
 //  Returned when using get command for a string.
@@ -471,10 +485,10 @@ bool Nextion::get_string(const char *component_id, char *string_buffer) {
     response.remove(0, 1);
     strcpy(string_buffer, response.c_str());
     if (this->print_debug_)
-      ESP_LOGD(TAG, "Received gets response \"%s\" for component id %s", string_buffer, component_id);
+      ESP_LOGD(TAG, "Received get_string response \"%s\" for component id %s", string_buffer, component_id);
     return true;
   } else {
-    ESP_LOGD(TAG, "Received unknown gets response \"%s\" for component id %s", response.c_str(), component_id);
+    ESP_LOGD(TAG, "Received unknown get_string response \"%s\" for component id %s", response.c_str(), component_id);
   }
   return false;
 }
@@ -503,9 +517,15 @@ uint32_t Nextion::get_int(const char *component_id) {
     }
 
     if (this->print_debug_)
-      ESP_LOGD(TAG, "Received getn response (%d) for component id %s", return_value, component_id);
+      ESP_LOGD(TAG, "Received get_int response (%d) for component id %s", return_value, component_id);
+
+  } else if (response[0] == 0x02) {
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Received invalid variable name for component id %s", component_id);
   } else {
-    ESP_LOGD(TAG, "Received unknown getn response \"%s\" for component id %s", response.c_str(), component_id);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Received unknown get_int response, length: \"%d\"  first_value: \"%d\" for component id %s",
+               response.length(), response.c_str()[0], component_id);
   }
   return return_value;
 }

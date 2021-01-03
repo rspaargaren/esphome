@@ -11,8 +11,9 @@ class NextionSensor : public NextionComponent, public sensor::Sensor, public Pol
  public:
   NextionSensor(Nextion *nextion) { this->nextion_ = nextion; }
   void process_sensor(char *variable_name, float state) override;
+  void update_component() override { this->update(); }
+  void set_state(uint32_t state);
   void update() override;
-  void write_state(uint32_t state);
   void nextion_setup() override;
 
  protected:
