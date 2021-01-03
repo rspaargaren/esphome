@@ -10,10 +10,12 @@ class NextionComponent {
   virtual void process_bool(char *variable_name, bool on){};
   virtual void process_sensor(char *variable_name, float state){};
   virtual void process_text(char *variable_name, char *text_value){};
+  virtual void update_component() = 0;
   virtual void nextion_setup() = 0;
 
   void set_page_id(uint8_t page_id) { page_id_ = page_id; }
   void set_component_id(uint8_t component_id) { component_id_ = component_id; }
+  void set_is_readonly(bool is_readonly) { is_readonly_ = is_readonly; }
   void set_variable_name(std::string variable_name, std::string variable_name_to_send = "") {
     variable_name_ = variable_name;
     if (variable_name_to_send == "") {
@@ -30,6 +32,7 @@ class NextionComponent {
   std::string variable_name_;
   std::string variable_name_to_send_;
   bool print_debug_ = true;
+  bool is_readonly_ = false;
 };
 }  // namespace nextion
 }  // namespace esphome

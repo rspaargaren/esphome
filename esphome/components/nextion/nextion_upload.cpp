@@ -192,11 +192,11 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
   // Anything over 65K seems to cause uart issues
   int mysize = this->chunk_size_ > 65536 ? 65536 : this->chunk_size_;
 
-  if (this->transfer_buffer == nullptr) {
+  if (this->transfer_buffer_ == nullptr) {
     if (this->print_debug_)
       ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
-    this->transfer_buffer = (uint8_t *) malloc(mysize);
-    if (!this->transfer_buffer) {
+    this->transfer_buffer_ = new uint8_t[mysize];  // (uint8_t *) malloc(mysize);
+    if (!this->transfer_buffer_) {
       ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d", mysize);
       return false;
     }
@@ -211,12 +211,12 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
       if (dosend + size >= mysize) {
         if (this->print_debug_)
           ESP_LOGD(TAG, "upload_from_stream_ write_array %d %d", dosend, size);
-        if (!this->upload_from_buffer_(transfer_buffer, dosend)) {
+        if (!this->upload_from_buffer_(transfer_buffer_, dosend)) {
           return false;
         }
         dosend = 0;
       }
-      int c = my_file.readBytes(&transfer_buffer[dosend], ((size > mysize) ? mysize : size));
+      int c = my_file.readBytes(&transfer_buffer_[dosend], ((size > mysize) ? mysize : size));
       // if (this->print_debug_)
       //   ESP_LOGD(TAG, "upload_from_stream_ sending %d bytes : total %d", c, this->total_);
       dosend += c;
@@ -228,7 +228,7 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
   if (dosend != 0) {
     if (this->print_debug_)
       ESP_LOGD(TAG, "upload_from_stream_ sending last few packets %d bytes : total %d", dosend, this->total_);
-    if (!this->upload_from_buffer_(transfer_buffer, dosend)) {
+    if (!this->upload_from_buffer_(transfer_buffer_, dosend)) {
       return false;
     }
   }
@@ -239,10 +239,6 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
 }
 void Nextion::upload_tft() {
   int old_baud = this->parent_->get_baud_rate();
-  if (this->has_updated_) {
-    ESP_LOGD(TAG, "Already Updated");
-    return;
-  }
 
   if (this->is_updating_) {
     ESP_LOGD(TAG, "Currently updating");
@@ -297,7 +293,9 @@ void Nextion::upload_tft() {
     delay(2);
 
     ESP_LOGD(TAG, "Updating Nextion...");
-
+    this->sleep(false);
+    delay(40);
+    delay(40);
     String response = String("");
     bool result;
     char command[128];
@@ -322,32 +320,19 @@ void Nextion::upload_tft() {
     result = this->upload_by_chunks_(content_length);
 
     if (result) {
-      ESP_LOGD(TAG, "Succesfully updated Nextion! Sleep for 1600ms");
+      ESP_LOGD(TAG, "Succesfully updated Nextion!");
     } else {
       ESP_LOGD(TAG, "Error updating Nextion:");
-      this->sent_packets_ = 0;
-      this->is_updating_ = false;
-      return;
     }
 
-    // end: wait(delay) for the nextion to finish the update process, send
-    // nextion reset command and end the serial connection to the nextion
-    // wait for the nextion to finish internal processes
-    delay(45);
-    delay(45);
-
-    // soft reset the nextion
-    this->soft_reset();
-
-    ESP_LOGD(TAG, "Nextion has been updated");
-    this->has_updated_ = true;
-    ESP.restart();
-  } else {
-    ESP_LOGD(TAG, "Nextion has NOT been updated, Bad HTTP status %d", code);
+    this->upload_end_();
   }
-  this->sent_packets_ = 0;
-  this->is_updating_ = false;
 }
-
+void Nextion::upload_end_() {
+  // this->sent_packets_ = 0;
+  // this->is_updating_ = false;
+  this->soft_reset();
+  ESP.restart();
+}
 }  // namespace nextion
 }  // namespace esphome

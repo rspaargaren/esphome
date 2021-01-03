@@ -11,8 +11,10 @@ class NextionSwitch : public NextionComponent, public switch_::Switch, public Po
  public:
   NextionSwitch(Nextion *nextion) { this->nextion_ = nextion; }
   void process_bool(char *variable_name, bool on) override;
+  void update_component() override { this->update(); }
   void update() override;
   void nextion_setup() override;
+  void set_state(bool state);
 
  protected:
   Nextion *nextion_;

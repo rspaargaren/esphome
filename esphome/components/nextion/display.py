@@ -9,16 +9,13 @@ from esphome.const import (
     CONF_BRIGHTNESS,
     CONF_TRIGGER_ID,
 )
-from . import nextion_ns
+from . import Nextion, nextion_ns, nextion_ref
 from .defines import CONF_ON_SLEEP, CONF_ON_WAKE
 
 DEPENDENCIES = ["uart", "network"]
 AUTO_LOAD = ["binary_sensor", "switch", "sensor", "text_sensor"]
 
 CONF_TFT_URL = "tft_url"
-
-Nextion = nextion_ns.class_("Nextion", cg.PollingComponent, uart.UARTDevice)
-NextionRef = Nextion.operator("ref")
 
 SleepTrigger = nextion_ns.class_("SleepTrigger", automation.Trigger.template())
 WakeTrigger = nextion_ns.class_("WakeTrigger", automation.Trigger.template())
@@ -57,6 +54,7 @@ def setup_nextion_(var, config):
 
 
 def to_code(config):
+    cg.add_define("USE_TIME")
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
     yield uart.register_uart_device(var, config)
@@ -65,7 +63,7 @@ def to_code(config):
         cg.add(var.set_brightness(config[CONF_BRIGHTNESS]))
     if CONF_LAMBDA in config:
         lambda_ = yield cg.process_lambda(
-            config[CONF_LAMBDA], [(NextionRef, "it")], return_type=cg.void
+            config[CONF_LAMBDA], [(nextion_ref, "it")], return_type=cg.void
         )
         cg.add(var.set_writer(lambda_))
 
