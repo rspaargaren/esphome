@@ -370,7 +370,6 @@ bool Nextion::read_until_ack_() {
         char variable_name[64];
         uint8_t variable_name_end = 0;
 
-        uint32_t value = 0;
         uint8_t index = 0;
 
         // Get variable name
@@ -385,13 +384,30 @@ bool Nextion::read_until_ack_() {
           invalid_data_length = true;
           break;
         }
+        // Skip the NULL
+        //++index;
+
         // Get variable data
+        for (int i = index + 1; i < data_length; ++i)
+          ESP_LOGD(TAG, "Received get_int response %d %d", i, data[i]);
+
         uint8_t num_byte_index = 0;
-        for (int i = index + 1; i < data_length; ++i) {
-          uint32_t factor = pow(2, (num_byte_index++ * 8));
-          uint32_t to_add = data[i] * factor;
-          value += to_add;
+        int value = 0;
+
+        int dataindex = 0;
+        for (int i = 0; i < data_length - index - 1; ++i) {
+          value += data[i + index + 1] << (8 * i);
+          ++dataindex;
         }
+
+        // if the length is < 4 than its a negative. 2s complement conversion is needed and
+        // fill in any missing bytes and then flip the bits
+        if (dataindex < 4) {
+          for (int i = dataindex; i < 4; ++i) {
+            value += 255 << (8 * i);
+          }
+        }
+
         ESP_LOGD(TAG, "Got special state 0x91 variable_name=%s value=%d", variable_name, value);
         for (auto *sensor : this->sensortype_) {
           sensor->process_sensor(&variable_name[0], value);
@@ -453,7 +469,7 @@ bool Nextion::read_until_ack_() {
   }
 
   return false;
-}
+}  // namespace nextion
 void Nextion::loop() {
   while (this->available() >= 4 && !this->is_updating_) {
     this->read_until_ack_();
@@ -507,6 +523,7 @@ uint32_t Nextion::get_int(const char *component_id) {
   this->send_command_no_ack(command);
 
   this->recv_ret_string_(response);
+
   if (response[0] == 0x71) {
     response.remove(0, 1);
 
