@@ -459,7 +459,7 @@ void Nextion::loop() {
     this->read_until_ack_();
   }
 }
-//#ifdef USE_TIME
+#ifdef USE_TIME
 void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc0=%u", time.year);
   this->send_command_printf("rtc1=%u", time.month);
@@ -468,7 +468,7 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc4=%u", time.minute);
   this->send_command_printf("rtc5=%u", time.second);
 }
-//#endif
+#endif
 
 //  0x70 0x61 0x62 0x31 0x32 0x33 0xFF 0xFF 0xFF
 //  Returned when using get command for a string.
