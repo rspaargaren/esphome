@@ -54,7 +54,6 @@ def setup_nextion_(var, config):
 
 
 def to_code(config):
-    cg.add_define("USE_TIME")
     var = cg.new_Pvariable(config[CONF_ID])
     yield cg.register_component(var, config)
     yield uart.register_uart_device(var, config)
