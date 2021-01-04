@@ -294,8 +294,9 @@ void Nextion::upload_tft() {
 
     ESP_LOGD(TAG, "Updating Nextion...");
     this->sleep(false);
-    delay(40);
-    delay(40);
+    for (int delayloop = 0; delayloop < 20; ++delayloop)
+      delay(40);
+
     String response = String("");
     bool result;
     char command[128];
