@@ -1,7 +1,7 @@
 #pragma once
-
-#include "esphome/components/nextion/nextion.h"
+#include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/nextion/nextion.h"
 
 namespace esphome {
 namespace nextion {

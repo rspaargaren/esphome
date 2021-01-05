@@ -1,5 +1,5 @@
 #pragma once
-#include "esphome/core/component.h"
+#include "Arduino.h"
 namespace esphome {
 namespace nextion {
 class NextionComponent;

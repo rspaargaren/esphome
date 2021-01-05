@@ -1,6 +1,3 @@
-#include "automation.h"
-#include "esphome/core/log.h"
-
 namespace esphome {
 namespace nextion {
 
