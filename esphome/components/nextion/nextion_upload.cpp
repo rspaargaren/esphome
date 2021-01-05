@@ -133,58 +133,6 @@ bool Nextion::upload_by_chunks_(int content_length) {
   return true;
 }
 
-uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv_flag) {
-#if defined ESP8266
-  yield();
-#endif
-
-  uint16_t ret = 0;
-  uint8_t c = 0;
-  uint8_t nr_of_ff_bytes = 0;
-  long start;
-  bool exit_flag = false;
-  bool ff_flag = false;
-  if (timeout != 500)
-    ESP_LOGD(TAG, "timeout serial read: %d", timeout);
-
-  start = millis();
-
-  while (millis() - start <= timeout) {
-    while (this->available()) {
-      this->read_byte(&c);
-      if (c == 0) {
-        continue;
-      }
-
-      if (c == 0xFF)
-        nr_of_ff_bytes++;
-      else {
-        nr_of_ff_bytes = 0;
-        ff_flag = false;
-      }
-
-      if (nr_of_ff_bytes >= 3)
-        ff_flag = true;
-
-      response += (char) c;
-
-      if (recv_flag) {
-        if (response.indexOf(0x05) != -1) {
-          exit_flag = true;
-        }
-      }
-    }
-    if (exit_flag || ff_flag) {
-      break;
-    }
-  }
-
-  if (ff_flag)
-    response = response.substring(0, response.length() - 3);  // Remove last 3 0xFF
-
-  ret = response.length();
-  return ret;
-}
 bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
 #if defined ESP8266
   yield();
