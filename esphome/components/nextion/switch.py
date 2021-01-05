@@ -12,7 +12,6 @@ from .defines import (
     CONF_NEXTION_COMPONENT_NAME,
     CONF_NEXTION_VARIABLE,
     CONF_NEXTION_COMPONENT,
-    CONF_READONLY,
 )
 
 
@@ -27,7 +26,6 @@ CONFIG_SCHEMA = cv.All(
                         cv.GenerateID(): cv.declare_id(NextionSwitch),
                         cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_COMPONENT_NAME): cv.string,
-                        cv.Optional(CONF_READONLY, default=False): cv.boolean,
                     }
                 ).extend(cv.polling_component_schema("never")),
             ),
@@ -37,7 +35,6 @@ CONFIG_SCHEMA = cv.All(
                         cv.GenerateID(): cv.declare_id(NextionSwitch),
                         cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_VARIABLE_NAME): cv.string,
-                        cv.Optional(CONF_READONLY, default=False): cv.boolean,
                     }
                 ).extend(cv.polling_component_schema("never")),
             ),
@@ -63,8 +60,6 @@ def setup_conf(config, funcName, is_component=None):
     else:
         param = config[CONF_NEXTION_COMPONENT_NAME]
         cg.add(func(param, param + ".val"))
-
-    cg.add(var.set_is_readonly(config[CONF_READONLY]))
 
 
 def to_code(config):

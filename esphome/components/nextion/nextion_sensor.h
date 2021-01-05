@@ -10,9 +10,9 @@ class NextionSensor;
 class NextionSensor : public NextionComponent, public sensor::Sensor, public PollingComponent {
  public:
   NextionSensor(Nextion *nextion) { this->nextion_ = nextion; }
-  void process_sensor(char *variable_name, float state) override;
+  void process_sensor(char *variable_name, int state) override;
   void update_component() override { this->update(); }
-  void set_state(uint32_t state);
+  void set_state(int state);
   void update() override;
   void nextion_setup() override;
 

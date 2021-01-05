@@ -79,6 +79,19 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   /**
    * Set the background color of a component.
    * @param component The component name.
+   * @param color The color (as a uint32_t).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_background_color("button", FF0000);
+   * ```
+   *
+   * This will change the background color of the component `button` to red.
+   */
+  void set_component_background_color(const char *component, uint32_t color);
+  /**
+   * Set the background color of a component.
+   * @param component The component name.
    * @param color The color (as a string).
    *
    * Example:
@@ -101,11 +114,23 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * it.set_component_background_color("button", color);
    * ```
    *
-   * This will change the background color of the component `button` to blue.
-   * Use this [color picker](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to convert color codes to
-   * Nextion HMI colors.
+   * This will change the background color of the component `button` to what color contains.
    */
   void set_component_background_color(const char *component, Color color);
+  /**
+   * Set the pressed background color of a component.
+   * @param component The component name.
+   * @param color The color (as a int).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_pressed_background_color("button", FF0000 );
+   * ```
+   *
+   * This will change the pressed background color of the component `button` to red. This is the background color that
+   * is shown when the component is pressed.
+   */
+  void set_component_pressed_background_color(const char *component, uint32_t color);
   /**
    * Set the pressed background color of a component.
    * @param component The component name.
@@ -141,6 +166,19 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   /**
    * Set the font color of a component.
    * @param component The component name.
+   * @param color The color (as a uint32_t ).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_font_color("textview", FF0000);
+   * ```
+   *
+   * This will change the font color of the component `textview` to a red color.
+   */
+  void set_component_font_color(const char *component, uint32_t color);
+  /**
+   * Set the font color of a component.
+   * @param component The component name.
    * @param color The color (as a string).
    *
    * Example:
@@ -168,6 +206,19 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * Nextion HMI colors.
    */
   void set_component_font_color(const char *component, Color color);
+  /**
+   * Set the pressed font color of a component.
+   * @param component The component name.
+   * @param color The color (as a uint32_t).
+   *
+   * Example:
+   * ```cpp
+   * it.set_component_pressed_font_color("button", FF0000);
+   * ```
+   *
+   * This will change the pressed font color of the component `button` to a red.
+   */
+  void set_component_pressed_font_color(const char *component, uint32_t color);
   /**
    * Set the pressed font color of a component.
    * @param component The component name.
@@ -572,6 +623,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * Upload the tft file and softreset the Nextion
    */
   void upload_tft();
+
   void dump_config() override;
 
   /**
@@ -584,16 +636,16 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * from the nextion
    * @param const char *component_id Component id to get the text from
    * @param char *string_buffer Buffer to put the text in
-   * @return true if success, false for failure.
+   * @return true if success, false for failure. Puts the components txt data into the string buffer
    */
   bool get_string(const char *component_id, char *string_buffer);
   /**
    * will request the an integer of component id
    * from the nextion
    * @param const char *component_id Component id to get the text from
-   * @return uint32_t of the components val
+   * @return int of the components val
    */
-  uint32_t get_int(const char *component_id);
+  int get_int(const char *component_id);
 
   /** Add a callback to be notified of sleep state changes.
    *
@@ -608,9 +660,6 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   void add_wake_state_callback(std::function<void(bool)> &&callback);
 
   void set_print_debug(bool print_debug);
-  void set_current_page(uint8_t current_page) { current_page_ = current_page; }
-  void refresh_nextion_onpage(bool refresh_nextion_onpage) { refresh_nextion_onpage_ = refresh_nextion_onpage; }
-  bool has_setup_ = false;
 
  protected:
   bool print_debug_ = true;
@@ -657,7 +706,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
 
   void upload_end_();
 
-  uint32_t nextion_71_to_uint32_(String data);
+  int nextion_71_to_int_(String data);
+  int nextion_71_to_int_(uint8_t *data[]);
   std::vector<NextionComponent *> touch_;
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;
@@ -671,13 +721,11 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   std::string tft_url_;
   int total_ = 0;
   int sent_packets_ = 0;
-  bool refresh_nextion_onpage_ = true;
-  uint8_t current_page_ = 0;
   char device_model_[64];
   char firmware_version_[64];
   char serial_number_[64];
   char flash_size_[64];
-  uint32_t chunk_size_ = 8192;
+  uint32_t chunk_size_ = 0;
   uint8_t *transfer_buffer_{nullptr};
 };
 }  // namespace nextion

@@ -21,7 +21,6 @@ void Nextion::setup() {
   this->send_command_printf("bkcmd=3");
   this->set_backlight_brightness(static_cast<uint8_t>(brightness_ * 100));
   this->goto_page("0");
-  this->has_setup_ = true;
 
   for (auto *sensortype : this->sensortype_) {
     sensortype->nextion_setup();
@@ -115,11 +114,17 @@ void Nextion::set_component_value(const char *component, int value) {
 void Nextion::display_picture(int picture_id, int x_start, int y_start) {
   this->send_command_printf("pic %d %d %d", x_start, y_start, picture_id);
 }
+void Nextion::set_component_background_color(const char *component, uint32_t color) {
+  this->send_command_printf("%s.bco=%d", component, color);
+}
 void Nextion::set_component_background_color(const char *component, const char *color) {
   this->send_command_printf("%s.bco=\"%s\"", component, color);
 }
 void Nextion::set_component_background_color(const char *component, Color color) {
   this->send_command_printf("%s.bco=%d", component, color.to_565());
+}
+void Nextion::set_component_pressed_background_color(const char *component, uint32_t color) {
+  this->send_command_printf("%s.bco2=%d", component, color);
 }
 void Nextion::set_component_pressed_background_color(const char *component, const char *color) {
   this->send_command_printf("%s.bco2=\"%s\"", component, color);
@@ -127,11 +132,17 @@ void Nextion::set_component_pressed_background_color(const char *component, cons
 void Nextion::set_component_pressed_background_color(const char *component, Color color) {
   this->send_command_printf("%s.bco2=%d", component, color.to_565());
 }
+void Nextion::set_component_font_color(const char *component, uint32_t color) {
+  this->send_command_printf("%s.pco=%d", component, color);
+}
 void Nextion::set_component_font_color(const char *component, const char *color) {
   this->send_command_printf("%s.pco=\"%s\"", component, color);
 }
 void Nextion::set_component_font_color(const char *component, Color color) {
   this->send_command_printf("%s.pco=%d", component, color.to_565());
+}
+void Nextion::set_component_pressed_font_color(const char *component, uint32_t color) {
+  this->send_command_printf("%s.pco2=%d", component, color);
 }
 void Nextion::set_component_pressed_font_color(const char *component, const char *color) {
   this->send_command_printf("%s.pco2=\"%s\"", component, color);
@@ -509,15 +520,68 @@ bool Nextion::get_string(const char *component_id, char *string_buffer) {
   return false;
 }
 
+uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv_flag) {
+#if defined ESP8266
+  yield();
+#endif
+
+  uint16_t ret = 0;
+  uint8_t c = 0;
+  uint8_t nr_of_ff_bytes = 0;
+  long start;
+  bool exit_flag = false;
+  bool ff_flag = false;
+  if (timeout != 500)
+    ESP_LOGD(TAG, "timeout serial read: %d", timeout);
+
+  start = millis();
+
+  while (millis() - start <= timeout) {
+    while (this->available()) {
+      this->read_byte(&c);
+      if (c == 0) {
+        continue;
+      }
+
+      if (c == 0xFF)
+        nr_of_ff_bytes++;
+      else {
+        nr_of_ff_bytes = 0;
+        ff_flag = false;
+      }
+
+      if (nr_of_ff_bytes >= 3)
+        ff_flag = true;
+
+      response += (char) c;
+
+      if (recv_flag) {
+        if (response.indexOf(0x05) != -1) {
+          exit_flag = true;
+        }
+      }
+    }
+    if (exit_flag || ff_flag) {
+      break;
+    }
+  }
+
+  if (ff_flag)
+    response = response.substring(0, response.length() - 3);  // Remove last 3 0xFF
+
+  ret = response.length();
+  return ret;
+}
+
 //  0x71 0x01 0x02 0x03 0x04 0xFF 0xFF 0xFF
 //  Returned when get command to return a number
 //  4 byte 32-bit value in little endian order.
 //  (0x01+0x02*256+0x03*65536+0x04*16777216)
 //  data: 67305985
-uint32_t Nextion::get_int(const char *component_id) {
+int Nextion::get_int(const char *component_id) {
   char command[64];
   String response = "";
-  uint32_t return_value = 0;
+  int value = 0;
 
   sprintf(command, "get %s", component_id);
   this->send_command_no_ack(command);
@@ -527,14 +591,24 @@ uint32_t Nextion::get_int(const char *component_id) {
   if (response[0] == 0x71) {
     response.remove(0, 1);
 
+    uint8_t num_byte_index = 0;
+
+    int dataindex = 0;
     for (int i = 0; i < response.length(); ++i) {
-      uint32_t factor = pow(2, (i * 8));
-      uint32_t to_add = response[i] * factor;
-      return_value += to_add;
+      value += response[i] << (8 * i);
+      ++dataindex;
+    }
+
+    // if the length is < 4 than its a negative. 2s complement conversion is needed and
+    // fill in any missing bytes and then flip the bits
+    if (dataindex < 4) {
+      for (int i = dataindex; i < 4; ++i) {
+        value += 255 << (8 * i);
+      }
     }
 
     if (this->print_debug_)
-      ESP_LOGD(TAG, "Received get_int response (%d) for component id %s", return_value, component_id);
+      ESP_LOGD(TAG, "Received get_int response (%d) for component id %s", value, component_id);
 
   } else if (response[0] == 0x02) {
     if (this->print_debug_)
@@ -544,17 +618,7 @@ uint32_t Nextion::get_int(const char *component_id) {
       ESP_LOGD(TAG, "Received unknown get_int response, length: \"%d\"  first_value: \"%d\" for component id %s",
                response.length(), response.c_str()[0], component_id);
   }
-  return return_value;
-}
-
-uint32_t Nextion::nextion_71_to_uint32_(String data) {
-  uint32_t return_value = 0;
-  for (int i = 0; i < data.length(); ++i) {
-    uint32_t factor = pow(2, (i * 8));
-    uint32_t to_add = data[i] * factor;
-    return_value += to_add;
-  }
-  return return_value;
+  return value;
 }
 
 void Nextion::soft_reset() { this->send_command_no_ack("rest"); }

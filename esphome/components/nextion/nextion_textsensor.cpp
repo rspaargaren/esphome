@@ -6,10 +6,7 @@ namespace esphome {
 namespace nextion {
 static const char *TAG = "nextion_textsensor";
 
-void NextionTextSensor::nextion_setup() {
-  if (this->nextion_->has_setup_)
-    this->update();
-}
+void NextionTextSensor::nextion_setup() { this->update(); }
 
 void NextionTextSensor::process_text(char *variable_name, char *text_value) {
   if (this->variable_name_ == variable_name) {
@@ -20,8 +17,6 @@ void NextionTextSensor::process_text(char *variable_name, char *text_value) {
 }
 
 void NextionTextSensor::update() {
-  if (!this->nextion_->has_setup_)
-    return;
   char buffer[256];
   if (this->nextion_->get_string(this->variable_name_to_send_.c_str(), buffer)) {
     this->publish_state(buffer);
