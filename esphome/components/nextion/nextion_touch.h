@@ -1,5 +1,4 @@
 #pragma once
-
 #include "esphome/components/nextion/nextion.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 
