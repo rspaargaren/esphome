@@ -589,6 +589,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   // (In most use cases you won't need these)
   void register_touch_component(NextionComponent *obj) { this->touch_.push_back(obj); }
   void register_switch_component(NextionComponent *obj) { this->switchtype_.push_back(obj); }
+  void register_binarysensor_component(NextionComponent *obj) { this->binarysensor_.push_back(obj); }
   void register_sensor_component(NextionComponent *obj) { this->sensortype_.push_back(obj); }
   void register_textsensor_component(NextionComponent *obj) { this->textsensortype_.push_back(obj); }
 
@@ -715,6 +716,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;
   std::vector<NextionComponent *> textsensortype_;
+  std::vector<NextionComponent *> binarysensor_;
   CallbackManager<void(bool)> sleep_callback_{};
   CallbackManager<void(bool)> wake_callback_{};
 
