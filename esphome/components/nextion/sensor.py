@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.core import coroutine
-from esphome.const import CONF_ID, UNIT_EMPTY, ICON_EMPTY, UNIT_PERCENT, ICON_PERCENT
+from esphome.const import CONF_ID, UNIT_EMPTY, ICON_EMPTY
 from . import nextion_ns, CONF_NEXTION_ID
 from .display import Nextion
 

@@ -661,6 +661,8 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
 
   void set_print_debug(bool print_debug);
 
+  void update_all_components();
+
  protected:
   bool print_debug_ = true;
   bool ack_();
@@ -703,8 +705,6 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
-
-  void update_all_components();
 
   void upload_end_();
 
