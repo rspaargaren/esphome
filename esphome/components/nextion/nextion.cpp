@@ -463,6 +463,37 @@ bool Nextion::read_until_ack_() {
         }
         break;
       }
+      // Data from nextion is
+      // 0x90 - Start
+      // variable length of 0x70 return formatted data (bytes) that contain the variable name: prints "temp1",0
+      // 00 - NULL
+      // 00/01 - Single byte for on/off
+      // FF FF FF - End
+      case 0x94: {  // Binary Sensor component
+        char variable_name[64];
+        uint8_t variable_name_end = 0;
+        uint8_t index = 0;
+
+        // Get variable name
+        for (index = 0; index < data_length; ++index) {
+          variable_name[index] = data[index];
+          if (data[index] == 0) {  // First Null
+            variable_name_end = index;
+            break;
+          }
+        }
+        if (variable_name_end == 0) {
+          invalid_data_length = true;
+          break;
+        }
+        ++index;
+
+        ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
+        for (auto *binarysensor : this->binarysensor_) {
+          binarysensor->process_bool(&variable_name[0], data[index] == 0 ? false : true);
+        }
+        break;
+      }
       case 0xFD:  // data transparent transmit finished
       case 0xFE:  // data transparent transmit ready
         break;
