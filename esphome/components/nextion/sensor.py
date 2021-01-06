@@ -57,9 +57,6 @@ CONFIG_SCHEMA = cv.All(
 
 @coroutine
 def setup_conf(config, funcName, is_component=None):
-    # for key2, value in config.items():
-    #     print("KEY: ", key2, " VALUE: ", value)
-
     hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
