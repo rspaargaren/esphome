@@ -14,17 +14,16 @@ from .defines import (
     CONF_NEXTION_COMPONENT,
 )
 
-
 NextionSwitch = nextion_ns.class_("NextionSwitch", switch.Switch, cg.PollingComponent)
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
+            cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
             cv.Optional(CONF_NEXTION_COMPONENT): cv.All(
                 switch.SWITCH_SCHEMA.extend(
                     {
                         cv.GenerateID(): cv.declare_id(NextionSwitch),
-                        cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_COMPONENT_NAME): cv.string,
                     }
                 ).extend(cv.polling_component_schema("never")),
@@ -33,7 +32,6 @@ CONFIG_SCHEMA = cv.All(
                 switch.SWITCH_SCHEMA.extend(
                     {
                         cv.GenerateID(): cv.declare_id(NextionSwitch),
-                        cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_VARIABLE_NAME): cv.string,
                     }
                 ).extend(cv.polling_component_schema("never")),
@@ -45,8 +43,7 @@ CONFIG_SCHEMA = cv.All(
 
 
 @coroutine
-def setup_conf(config, funcName, is_component=None):
-    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
+def setup_conf(hub, config, funcName, is_component=None):
     var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
     yield switch.register_switch(var, config)
@@ -63,8 +60,9 @@ def setup_conf(config, funcName, is_component=None):
 
 
 def to_code(config):
+    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     if CONF_NEXTION_VARIABLE in config:
-        yield setup_conf(config[CONF_NEXTION_VARIABLE], "set_variable_name")
+        yield setup_conf(hub, config[CONF_NEXTION_VARIABLE], "set_variable_name")
 
     if CONF_NEXTION_COMPONENT in config:
-        yield setup_conf(config[CONF_NEXTION_COMPONENT], "set_variable_name", 1)
+        yield setup_conf(hub, config[CONF_NEXTION_COMPONENT], "set_variable_name", 1)
