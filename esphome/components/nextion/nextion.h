@@ -670,17 +670,19 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * will request chunk_size chunks from the web server
    * and send each to the nextion
    * @param int contentLength Total size of the file
+   * @param uint32_t chunk_size
    * @return true if success, false for failure.
    */
-  bool upload_by_chunks_(int content_length);
+  bool upload_by_chunks_(int content_length, uint32_t chunk_size);
   /**
    * start update tft file to nextion.
    *
    * @param Stream &myFile
    * @param int contentLength Total size of the file
+   * @param uint32_t chunk_size
    * @return true if success, false for failure.
    */
-  bool upload_from_stream_(Stream &my_file, int content_length);
+  bool upload_from_stream_(Stream &my_file, int content_length, uint32_t chunk_size);
 
   /**
    * start update tft file to nextion.
@@ -708,6 +710,7 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
 
   int nextion_71_to_int_(String data);
   int nextion_71_to_int_(uint8_t *data[]);
+
   std::vector<NextionComponent *> touch_;
   std::vector<NextionComponent *> switchtype_;
   std::vector<NextionComponent *> sensortype_;
@@ -725,7 +728,6 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   char firmware_version_[64];
   char serial_number_[64];
   char flash_size_[64];
-  uint32_t chunk_size_ = 0;
   uint8_t *transfer_buffer_{nullptr};
 };
 }  // namespace nextion

@@ -7,6 +7,8 @@ namespace esphome {
 namespace nextion {
 
 static const char *TAG = "nextion_upload";
+// Followed guide
+// https://nextion.tech/2017/12/08/nextion-hmi-upload-protocol-v1-1/
 
 bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
 #if defined ESP8266
@@ -50,22 +52,21 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
       // write byte to nextion over serial
       this->write_byte(c);
 
-      // update sent packets counter
+      // update sent packets and total counter
       this->sent_packets_++;
       this->total_++;
-      // delayMicroseconds(100);
     }
   }
 
   return true;
 }
 
-bool Nextion::upload_by_chunks_(int content_length) {
+bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
   if (this->print_debug_)
-    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, this->chunk_size_);
+    ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, chunk_size);
 
-  for (int range_start = 0; range_start < content_length; range_start += this->chunk_size_) {
-    int range_end = range_start + this->chunk_size_ - 1;
+  for (int range_start = 0; range_start < content_length; range_start += chunk_size) {
+    int range_end = range_start + chunk_size - 1;
     if (range_end > content_length)
       range_end = content_length;
 
@@ -86,7 +87,7 @@ bool Nextion::upload_by_chunks_(int content_length) {
     int code = http.GET();
     while (code != 200 && code != 206 && tries <= 5) {
       ESP_LOGD(TAG, "upload_by_chunks_ retrying (%d/5)", tries);
-      for (int i = 0; i < 12; ++i)  // Need a decent delay and since we will be rebooting this shouldnt be an issue.
+      for (int i = 0; i < 12; ++i)  // Needs a decent delay and since we will be rebooting this shouldnt be an issue.
         delay(40);
 
       code = http.GET();
@@ -94,7 +95,7 @@ bool Nextion::upload_by_chunks_(int content_length) {
     }
     if (code == 200 || code == 206) {
       // Upload the received byte Stream to the nextion
-      bool result = this->upload_from_stream_(*http.getStreamPtr(), range_end - range_start);
+      bool result = this->upload_from_stream_(*http.getStreamPtr(), range_end - range_start, chunk_size);
       if (result) {
         if (this->print_debug_)
           ESP_LOGD(TAG, "Succesfully sent chunk to Nextion");
@@ -110,7 +111,7 @@ bool Nextion::upload_by_chunks_(int content_length) {
     http.end();  // End this HTTP call because we read all the data
   }
 
-  if (content_length % 4096 != 0) {  // If not in 4096 chunks wait for the last bits to confirm
+  if (content_length % 4096 != 0) {  // Wait for the last bits to confirm. Normally the above loop does this
     String string = String("");
     uint8_t timeout = 0;
     this->recv_ret_string_(string, 500, true);
@@ -133,19 +134,23 @@ bool Nextion::upload_by_chunks_(int content_length) {
   return true;
 }
 
-bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
+bool Nextion::upload_from_stream_(Stream &my_file, int content_length, uint32_t chunk_size) {
 #if defined ESP8266
   yield();
 #endif
   // Anything over 65K seems to cause uart issues
-  int mysize = this->chunk_size_ > 65536 ? 65536 : this->chunk_size_;
+  int mysize = chunk_size > 65536 ? 65536 : chunk_size;
 
   if (this->transfer_buffer_ == nullptr) {
     if (this->print_debug_)
       ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
-    this->transfer_buffer_ = new uint8_t[mysize];  // (uint8_t *) malloc(mysize);
-    if (!this->transfer_buffer_) {
-      ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d", mysize);
+    this->transfer_buffer_ = new uint8_t[mysize];
+    if (!this->transfer_buffer_) {  // Try a smaller size
+      ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d trying 8192 instead", mysize);
+      mysize = 8192;
+      if (this->print_debug_)
+        ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
+      this->transfer_buffer_ = new uint8_t[mysize];
       return false;
     }
   }
@@ -165,8 +170,6 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
         dosend = 0;
       }
       int c = my_file.readBytes(&transfer_buffer_[dosend], ((size > mysize) ? mysize : size));
-      // if (this->print_debug_)
-      //   ESP_LOGD(TAG, "upload_from_stream_ sending %d bytes : total %d", c, this->total_);
       dosend += c;
       if (content_length > 0) {
         content_length -= c;
@@ -174,20 +177,16 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length) {
     }
   }
   if (dosend != 0) {
-    if (this->print_debug_)
-      ESP_LOGD(TAG, "upload_from_stream_ sending last few packets %d bytes : total %d", dosend, this->total_);
     if (!this->upload_from_buffer_(transfer_buffer_, dosend)) {
       return false;
     }
   }
   uint32_t end = millis() - start;
-  uint32_t realms = (this->chunk_size_ * 1000) / end;
+  uint32_t realms = (chunk_size * 1000) / end;
   ESP_LOGD(TAG, "upload_from_stream_ %d bytes in %d ms, %d  bytes/sec", this->total_, end, realms);
   return true;
 }
 void Nextion::upload_tft() {
-  int old_baud = this->parent_->get_baud_rate();
-
   if (this->is_updating_) {
     ESP_LOGD(TAG, "Currently updating");
     return;
@@ -199,12 +198,15 @@ void Nextion::upload_tft() {
   }
 
   // This controls the range got from the webserver and the transfer buffer
-  int chunk = ((ESP.getFreeHeap()) * .5) / 4096;
+  // The http client "can" use up to this if we arent fast enough so its best
+  // to leave room for both. We send 4096 bytes to the Nextion so get
+  // x 4096 chunks
+  int chunk = ((ESP.getFreeHeap()) * .4) / 4096;  // 40% for the chunk and maybe the http buffer.
+  uint32_t chunk_size = chunk * 4096;
 
-  this->chunk_size_ = chunk * 4096;
   ESP_LOGD(TAG, "Heap Size %d", ESP.getFreeHeap());
 
-  ESP_LOGD(TAG, "Updating tft from : %s : using %d chunksize", this->tft_url_.c_str(), this->chunk_size_);
+  ESP_LOGD(TAG, "Updating tft from : %s : using %d chunksize", this->tft_url_.c_str(), chunk_size);
 
   this->is_updating_ = true;
   this->total_ = 0;
@@ -232,7 +234,8 @@ void Nextion::upload_tft() {
     code = http.GET();
     ++tries;
   }
-  // Update the nextion display
+
+  // OK or Partial Content
   if (code == 200 || code == 206) {
     String content_range_string = http.header("Content-Range");
     content_range_string.remove(0, 12);
@@ -241,18 +244,21 @@ void Nextion::upload_tft() {
     delay(2);
 
     ESP_LOGD(TAG, "Updating Nextion...");
+    // The Nextion will ignore the update command if it is sleeping
     this->sleep(false);
-    for (int delayloop = 0; delayloop < 20; ++delayloop)
+    for (int delayloop = 0; delayloop < 20; ++delayloop)  // Wait for it to wake up
       delay(40);
 
-    String response = String("");
-    bool result;
     char command[128];
+    // Tells the Nextion the content length of the tft file and baud rate it will be sent at
+    // Once the Nextion accepts the command it will wait until the file is successfully uploaded
+    // If it fails for any reason a power cycle of the display will be needed
     sprintf(command, "whmi-wri %d,%d,0", content_length, this->parent_->get_baud_rate());
     this->send_command_no_ack(command);
-    // Flush
+    // Flush serial
     this->flush();
 
+    String response = String("");
     this->recv_ret_string_(response, 800, true);  // normal response time is 400ms
 
     // The Nextion display will, if it's ready to accept data, send a 0x05 byte.
@@ -265,8 +271,8 @@ void Nextion::upload_tft() {
       return;
     }
     ESP_LOGD(TAG, "Start upload. File size is: %d bytes", content_length);
-    // Upload the received byte Stream to the nextion
-    result = this->upload_by_chunks_(content_length);
+
+    bool result = this->upload_by_chunks_(content_length, chunk_size);
 
     if (result) {
       ESP_LOGD(TAG, "Succesfully updated Nextion!");
@@ -277,9 +283,8 @@ void Nextion::upload_tft() {
     this->upload_end_();
   }
 }
+
 void Nextion::upload_end_() {
-  // this->sent_packets_ = 0;
-  // this->is_updating_ = false;
   this->soft_reset();
   ESP.restart();
 }

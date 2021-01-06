@@ -346,8 +346,6 @@ bool Nextion::read_until_ack_() {
       case 0x90: {  // Switched component
         char variable_name[64];
         uint8_t variable_name_end = 0;
-
-        bool value;
         uint8_t index = 0;
 
         // Get variable name
@@ -364,7 +362,7 @@ bool Nextion::read_until_ack_() {
         }
         ++index;
 
-        ESP_LOGD(TAG, "Got special state 0x90 variable_name=%s value=%d", variable_name, data[index]);
+        ESP_LOGD(TAG, "Got Switch variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
         for (auto *switchtype : this->switchtype_) {
           switchtype->process_bool(&variable_name[0], data[index] == 0 ? false : true);
         }
@@ -376,11 +374,9 @@ bool Nextion::read_until_ack_() {
       // 00 - NULL
       // variable length of 0x71 return data: prints temp1.val,0
       // FF FF FF - End
-      case 0x91: {  // variable/integer component
-        ESP_LOGD("nextion loop", "data_length %d", data_length);
+      case 0x91: {  // Sensor component
         char variable_name[64];
         uint8_t variable_name_end = 0;
-
         uint8_t index = 0;
 
         // Get variable name
@@ -395,31 +391,27 @@ bool Nextion::read_until_ack_() {
           invalid_data_length = true;
           break;
         }
-        // Skip the NULL
-        //++index;
 
         // Get variable data
         for (int i = index + 1; i < data_length; ++i)
           ESP_LOGD(TAG, "Received get_int response %d %d", i, data[i]);
 
-        uint8_t num_byte_index = 0;
         int value = 0;
-
         int dataindex = 0;
         for (int i = 0; i < data_length - index - 1; ++i) {
           value += data[i + index + 1] << (8 * i);
           ++dataindex;
         }
 
-        // if the length is < 4 than its a negative. 2s complement conversion is needed and
-        // fill in any missing bytes and then flip the bits
+        // if the length is < 4 than its a negative.
+        // fill in any missing bytes
         if (dataindex < 4) {
           for (int i = dataindex; i < 4; ++i) {
             value += 255 << (8 * i);
           }
         }
 
-        ESP_LOGD(TAG, "Got special state 0x91 variable_name=%s value=%d", variable_name, value);
+        ESP_LOGD(TAG, "Got sensor variable_name=%s value=%d", variable_name, value);
         for (auto *sensor : this->sensortype_) {
           sensor->process_sensor(&variable_name[0], value);
         }
@@ -432,7 +424,7 @@ bool Nextion::read_until_ack_() {
       // variable length of 0x70 return formatted data (bytes) that contain the text prints temp1.txt,0
       // 00 - NULL
       // FF FF FF - End
-      case 0x92: {  // Switched component
+      case 0x92: {  // Text Sensor Component
         char variable_name[64];
         char text_value[128];
         uint8_t variable_name_end = 0;
@@ -450,15 +442,22 @@ bool Nextion::read_until_ack_() {
           invalid_data_length = true;
           break;
         }
-        ++index;
 
+        variable_name_end = 0;
+        int data_index = 0;
         for (int i = index + 1; i < data_length; ++i) {
-          text_value[index] = data[i];
+          text_value[data_index++] = data[i];
           if (data[i] == 0) {  // Second Null
+            variable_name_end = index;
             break;
           }
         }
-        ESP_LOGD(TAG, "Got special state 0x92 variable_name=%s value=%d", variable_name, data[index]);
+        if (variable_name_end == 0) {
+          invalid_data_length = true;
+          break;
+        }
+
+        ESP_LOGD(TAG, "Got Text Sensor variable_name=%s value=%s", variable_name, text_value);
         for (auto *textsensortype : this->textsensortype_) {
           textsensortype->process_text(&variable_name[0], &text_value[0]);
         }
