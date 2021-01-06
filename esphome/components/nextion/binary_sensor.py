@@ -11,9 +11,6 @@ from .defines import (
 
 DEPENDENCIES = ["display"]
 
-NextionTouchComponent = nextion_ns.class_(
-    "NextionTouchComponent", binary_sensor.BinarySensor
-)
 
 NextionBinarySensor = nextion_ns.class_(
     "NextionBinarySensor", binary_sensor.BinarySensor, cg.PollingComponent
@@ -22,7 +19,6 @@ NextionBinarySensor = nextion_ns.class_(
 CONFIG_SCHEMA = cv.All(
     binary_sensor.BINARY_SENSOR_SCHEMA.extend(
         {
-            # cv.GenerateID(): cv.declare_id(NextionTouchComponent),
             cv.GenerateID(): cv.declare_id(NextionBinarySensor),
             cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
             cv.Optional(CONF_PAGE_ID): cv.uint8_t,
@@ -56,7 +52,7 @@ def to_code(config):
                 + "and {CONF_VARIABLE_ID} should be set"
             )
 
-        # cg.add(hub.register_touch_component(var))
+        cg.add(hub.register_touch_component(var))
         cg.add(var.set_component_id(config[CONF_COMPONENT_ID]))
         cg.add(var.set_page_id(config[CONF_PAGE_ID]))
     elif config.keys() >= {CONF_PAGE_ID, CONF_COMPONENT_ID}:
