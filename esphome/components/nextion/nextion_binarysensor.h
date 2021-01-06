@@ -13,6 +13,7 @@ class NextionBinarySensor : public NextionComponent,
  public:
   NextionBinarySensor(Nextion *nextion) { this->nextion_ = nextion; }
   void process_bool(char *variable_name, bool on) override;
+  void process(uint8_t page_id, uint8_t component_id, bool on) override;
   void update_component() override { this->update(); }
   void update() override;
   void nextion_setup() override;

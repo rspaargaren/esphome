@@ -17,6 +17,12 @@ void NextionBinarySensor::process_bool(char *variable_name, bool on) {
   }
 }
 
+void NextionBinarySensor::process(uint8_t page_id, uint8_t component_id, bool on) {
+  if (this->page_id_ == page_id && this->component_id_ == component_id) {
+    this->publish_state(on);
+  }
+}
+
 void NextionBinarySensor::update() {
   uint32_t state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
   this->publish_state(state == 0 ? false : true);
