@@ -2,11 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
 from esphome.core import coroutine
-from esphome.const import (
-    CONF_ID,
-    UNIT_EMPTY,
-    ICON_EMPTY,
-)
+from esphome.const import CONF_ID, UNIT_EMPTY, ICON_EMPTY, UNIT_PERCENT, ICON_PERCENT
 from . import nextion_ns, CONF_NEXTION_ID
 from .display import Nextion
 
@@ -20,19 +16,16 @@ from .defines import (
 DEPENDENCIES = ["display"]
 
 NextionSensor = nextion_ns.class_("NextionSensor", sensor.Sensor, cg.PollingComponent)
-NextionSensorNonPolling = nextion_ns.class_(
-    "NextionSensor", sensor.Sensor, cg.Component
-)
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
+            cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
             cv.Optional(CONF_NEXTION_COMPONENT): cv.All(
                 sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 2)
                 .extend(
                     {
                         cv.GenerateID(): cv.declare_id(NextionSensor),
-                        cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_COMPONENT_NAME): cv.string,
                     }
                 )
@@ -44,7 +37,6 @@ CONFIG_SCHEMA = cv.All(
             .extend(
                 {
                     cv.GenerateID(): cv.declare_id(NextionSensor),
-                    cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                     cv.Required(CONF_NEXTION_VARIABLE_NAME): cv.string,
                 }
             )
@@ -56,8 +48,7 @@ CONFIG_SCHEMA = cv.All(
 
 
 @coroutine
-def setup_conf(config, funcName, is_component=None):
-    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
+def setup_conf(hub, config, funcName, is_component=None):
     var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
     yield sensor.register_sensor(var, config)
@@ -75,10 +66,10 @@ def setup_conf(config, funcName, is_component=None):
 
 
 def to_code(config):
-    if CONF_NEXTION_VARIABLE in config:
-        yield setup_conf(config[CONF_NEXTION_VARIABLE], "set_variable_name")
-        return
+    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
 
     if CONF_NEXTION_COMPONENT in config:
-        yield setup_conf(config[CONF_NEXTION_COMPONENT], "set_variable_name", 1)
-        return
+        yield setup_conf(hub, config[CONF_NEXTION_COMPONENT], "set_variable_name", 1)
+
+    if CONF_NEXTION_VARIABLE in config:
+        yield setup_conf(hub, config[CONF_NEXTION_VARIABLE], "set_variable_name")

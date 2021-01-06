@@ -14,11 +14,11 @@ NextionTextSensor = nextion_ns.class_(
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
+            cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
             cv.Required(CONF_NEXTION_COMPONENT): cv.All(
                 text_sensor.TEXT_SENSOR_SCHEMA.extend(
                     {
                         cv.GenerateID(): cv.declare_id(NextionTextSensor),
-                        cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                         cv.Required(CONF_NEXTION_COMPONENT_NAME): cv.string,
                     }
                 ).extend(cv.polling_component_schema("never")),
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = cv.All(
 
 def to_code(config):
     conf = config[CONF_NEXTION_COMPONENT]
-    hub = yield cg.get_variable(conf[CONF_NEXTION_ID])
+    hub = yield cg.get_variable(config[CONF_NEXTION_ID])
     var = cg.new_Pvariable(conf[CONF_ID], hub)
     yield cg.register_component(var, conf)
     yield text_sensor.register_text_sensor(var, conf)
