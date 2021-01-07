@@ -61,6 +61,15 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
   return true;
 }
 
+#ifdef ARDUINO_ARCH_ESP8266
+WiFiClient *Nextion::get_wifi_client_() {
+  if (this->wifi_client_ == nullptr) {
+    this->wifi_client_ = new WiFiClient();
+  }
+  return this->wifi_client_;
+}
+#endif
+
 bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
   if (this->print_debug_)
     ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, chunk_size);
@@ -71,10 +80,24 @@ bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
       range_end = content_length;
 
     HTTPClient http;
-    if (!http.begin(this->tft_url_.c_str())) {
+
+    bool begin_status = false;
+#ifdef ARDUINO_ARCH_ESP32
+    begin_status = this->http.begin(this->tft_url_.c_str());
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+#ifndef CLANG_TIDY
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setRedirectLimit(3);
+    begin_status = http.begin(*this->get_wifi_client_(), this->tft_url_.c_str());
+#endif
+#endif
+
+    if (!begin_status) {
       ESP_LOGD(TAG, "upload_by_chunks_: connection failed");
       return false;
     }
+
     char range_header[64];
     sprintf(range_header, "bytes=%d-%d", range_start, range_end);
 

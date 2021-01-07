@@ -9,7 +9,13 @@
 #include "nextion_sensor.h"
 #include "nextion_binarysensor.h"
 #include "esphome/core/color.h"
+#ifdef ARDUINO_ARCH_ESP32
 #include <HTTPClient.h>
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
+#endif
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -675,6 +681,10 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
+#ifdef ARDUINO_ARCH_ESP8266
+  WiFiClient *wifi_client_{nullptr};
+  WiFiClient *get_wifi_client_();
+#endif
   /**
    * will request chunk_size chunks from the web server
    * and send each to the nextion
