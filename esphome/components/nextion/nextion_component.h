@@ -28,6 +28,7 @@ class NextionComponent {
 
   std::string variable_name_;
   std::string variable_name_to_send_;
+
   bool print_debug_ = true;
 };
 }  // namespace nextion

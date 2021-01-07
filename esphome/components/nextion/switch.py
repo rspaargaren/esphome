@@ -17,8 +17,8 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         switch.SWITCH_SCHEMA.extend(
             {
-                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.GenerateID(): cv.declare_id(NextionSwitch),
+                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.Optional(CONF_NEXTION_COMPONENT_NAME): cv.string,
                 cv.Optional(CONF_NEXTION_VARIABLE_NAME): cv.string,
             }
@@ -33,6 +33,7 @@ def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID], hub)
     yield cg.register_component(var, config)
     yield switch.register_switch(var, config)
+    cg.add(hub.register_switch_component(var))
 
     if CONF_NEXTION_VARIABLE_NAME in config:
         cg.add(var.set_variable_name(config[CONF_NEXTION_VARIABLE_NAME]))

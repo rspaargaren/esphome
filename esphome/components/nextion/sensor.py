@@ -19,8 +19,8 @@ CONFIG_SCHEMA = cv.All(
         sensor.sensor_schema(UNIT_EMPTY, ICON_EMPTY, 2)
         .extend(
             {
-                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.GenerateID(): cv.declare_id(NextionSensor),
+                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.Optional(CONF_NEXTION_COMPONENT_NAME): cv.string,
                 cv.Optional(CONF_NEXTION_VARIABLE_NAME): cv.string,
             }

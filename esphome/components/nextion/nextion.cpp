@@ -21,9 +21,12 @@ void Nextion::setup() {
   this->send_command_printf("bkcmd=3");
   this->set_backlight_brightness(static_cast<uint8_t>(brightness_ * 100));
   this->goto_page("0");
-
+  this->is_setup_ = true;
   for (auto *sensortype : this->sensortype_) {
     sensortype->nextion_setup();
+  }
+  for (auto *binarysensortype : this->binarysensortype_) {
+    binarysensortype->nextion_setup();
   }
   for (auto *switchtype : this->switchtype_) {
     switchtype->nextion_setup();
@@ -490,8 +493,8 @@ bool Nextion::read_until_ack_() {
         ++index;
 
         ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
-        for (auto *binarysensor : this->binarysensor_) {
-          binarysensor->process_bool(&variable_name[0], data[index] == 0 ? false : true);
+        for (auto *binarysensortype : this->binarysensortype_) {
+          binarysensortype->process_bool(&variable_name[0], data[index] == 0 ? false : true);
         }
         break;
       }
