@@ -7,13 +7,22 @@ namespace nextion {
 
 static const char *TAG = "nextion_binarysensor";
 
-void NextionBinarySensor::nextion_setup() { this->update(); }
+void NextionBinarySensor::nextion_setup() {
+  if (this->nextion_->is_setup_)
+    this->update();
+}
 
 void NextionBinarySensor::process_bool(char *variable_name, bool on) {
   if (this->variable_name_ == variable_name) {
     this->publish_state(on);
     if (this->print_debug_)
       ESP_LOGD(TAG, "Processed binarysensor \"%s\" state %s", variable_name, state ? "ON" : "OFF");
+  }
+}
+
+void NextionBinarySensor::process_touch(uint8_t page_id, uint8_t component_id, bool on) {
+  if (this->page_id_ == page_id && this->component_id_ == component_id) {
+    this->publish_state(on);
   }
 }
 

@@ -1,6 +1,4 @@
-CONF_NEXTION_VARIABLE = "nextion_variable"
 CONF_NEXTION_VARIABLE_NAME = "nextion_variable_name"
-CONF_NEXTION_COMPONENT = "nextion_component"
 CONF_NEXTION_COMPONENT_NAME = "nextion_component_name"
 CONF_NEXTION_TOUCH_COMPONENT = "nextion_touch_component"
 CONF_NEXTION_HASS_NAME = "hass_component_name"

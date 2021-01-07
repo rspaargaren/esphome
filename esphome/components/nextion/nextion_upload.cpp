@@ -61,6 +61,24 @@ bool Nextion::upload_from_buffer_(const uint8_t *file_buf, size_t buf_size) {
   return true;
 }
 
+#ifdef ARDUINO_ARCH_ESP8266
+WiFiClient *Nextion::get_wifi_client_() {
+  if (this->tft_url_.compare(0, 6, "https:") == 0) {
+    if (this->wifi_client_secure_ == nullptr) {
+      this->wifi_client_secure_ = new BearSSL::WiFiClientSecure();
+      this->wifi_client_secure_->setInsecure();
+      this->wifi_client_secure_->setBufferSizes(512, 512);
+    }
+    return this->wifi_client_secure_;
+  }
+
+  if (this->wifi_client_ == nullptr) {
+    this->wifi_client_ = new WiFiClient();
+  }
+  return this->wifi_client_;
+}
+#endif
+
 bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
   if (this->print_debug_)
     ESP_LOGD(TAG, "upload_by_chunks_: contentLength %d , chunk_size: %d", content_length, chunk_size);
@@ -71,10 +89,24 @@ bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
       range_end = content_length;
 
     HTTPClient http;
-    if (!http.begin(this->tft_url_.c_str())) {
+
+    bool begin_status = false;
+#ifdef ARDUINO_ARCH_ESP32
+    begin_status = http.begin(this->tft_url_.c_str());
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+#ifndef CLANG_TIDY
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setRedirectLimit(3);
+    begin_status = http.begin(*this->get_wifi_client_(), this->tft_url_.c_str());
+#endif
+#endif
+
+    if (!begin_status) {
       ESP_LOGD(TAG, "upload_by_chunks_: connection failed");
       return false;
     }
+
     char range_header[64];
     sprintf(range_header, "bytes=%d-%d", range_start, range_end);
 
@@ -146,8 +178,8 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length, uint32_t 
       ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
     this->transfer_buffer_ = new uint8_t[mysize];
     if (!this->transfer_buffer_) {  // Try a smaller size
-      ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d trying 8192 instead", mysize);
-      mysize = 8192;
+      ESP_LOGD(TAG, "upload_from_stream_ could not allocate buffer size: %d trying 4096 instead", mysize);
+      mysize = 4096;
       if (this->print_debug_)
         ESP_LOGD(TAG, "upload_from_stream_ allocating %d buffer", mysize);
       this->transfer_buffer_ = new uint8_t[mysize];
@@ -259,13 +291,13 @@ void Nextion::upload_tft() {
     this->flush();
 
     String response = String("");
-    this->recv_ret_string_(response, 800, true);  // normal response time is 400ms
+    this->recv_ret_string_(response, 2000, true);  // This can take some time to return
 
     // The Nextion display will, if it's ready to accept data, send a 0x05 byte.
     if (response.indexOf(0x05) != -1) {
       ESP_LOGD(TAG, "preparation for tft update done");
     } else {
-      ESP_LOGD(TAG, "preparation for tft update failed");
+      ESP_LOGD(TAG, "preparation for tft update failed %d \"%s\"", response[0], response.c_str());
       this->sent_packets_ = 0;
       this->is_updating_ = false;
       return;
@@ -279,7 +311,6 @@ void Nextion::upload_tft() {
     } else {
       ESP_LOGD(TAG, "Error updating Nextion:");
     }
-
     this->upload_end_();
   }
 }

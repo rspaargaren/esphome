@@ -9,15 +9,8 @@ namespace nextion {
 static const char *TAG = "nextion_switch";
 
 void NextionSwitch::nextion_setup() {
-  this->update();
-  if (this->hass_name_ != = "none")
-    subscribe_homeassistant_state(&NextionSwitch::on_state_changed, this->hass_name_);
-}
-
-void NextionSwitch::on_state_changed(std::string state) {
-  // State of sensor.weather_forecast is `state`
-  ESP_LOGD(TAG, "RECEIVED SAMSUNG switch state %s", state.c_str());
-  this->write_state(state.c_str());
+  if (this->nextion_->is_setup_)
+    this->update();
 }
 
 void NextionSwitch::process_bool(char *variable_name, bool on) {

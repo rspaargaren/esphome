@@ -2,9 +2,20 @@
 
 #include "esphome/core/defines.h"
 #include "esphome/components/uart/uart.h"
-#include "esphome/components/nextion/nextion_component.h"
+#include "nextion_base.h"
+#include "nextion_component.h"
+#include "nextion_textsensor.h"
+#include "nextion_switch.h"
+#include "nextion_sensor.h"
+#include "nextion_binarysensor.h"
 #include "esphome/core/color.h"
+#ifdef ARDUINO_ARCH_ESP32
 #include <HTTPClient.h>
+#endif
+#ifdef ARDUINO_ARCH_ESP8266
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
+#endif
 
 #ifdef USE_TIME
 #include "esphome/components/time/real_time_clock.h"
@@ -17,7 +28,7 @@ class Nextion;
 
 using nextion_writer_t = std::function<void(Nextion &)>;
 
-class Nextion : public PollingComponent, public uart::UARTDevice {
+class Nextion : public NextionBase, public PollingComponent, public uart::UARTDevice {
  public:
   /**
    * Set the text of a component to a static string.
@@ -587,11 +598,11 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
 
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
-  void register_touch_component(NextionComponent *obj) { this->touch_.push_back(obj); }
-  void register_switch_component(NextionComponent *obj) { this->switchtype_.push_back(obj); }
-  void register_binarysensor_component(NextionComponent *obj) { this->binarysensor_.push_back(obj); }
-  void register_sensor_component(NextionComponent *obj) { this->sensortype_.push_back(obj); }
-  void register_textsensor_component(NextionComponent *obj) { this->textsensortype_.push_back(obj); }
+  void register_touch_component(NextionBinarySensor *obj) { this->touch_.push_back(obj); }
+  void register_switch_component(NextionSwitch *obj) { this->switchtype_.push_back(obj); }
+  void register_binarysensor_component(NextionBinarySensor *obj) { this->binarysensortype_.push_back(obj); }
+  void register_sensor_component(NextionSensor *obj) { this->sensortype_.push_back(obj); }
+  void register_textsensor_component(NextionTextSensor *obj) { this->textsensortype_.push_back(obj); }
 
   void setup() override;
   void set_brightness(float brightness) { this->brightness_ = brightness; }
@@ -605,13 +616,14 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param command The command to write, for example "vis b0,0".
    */
   void send_command_no_ack(const char *command);
-  /**
-   * Manually send a raw formatted command to the display.
-   * @param format The printf-style command format, like "vis %s,0"
-   * @param ... The format arguments
-   * @return Whether the send was successful.
-   */
-  bool send_command_printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
+
+  // /**
+  //  * Manually send a raw formatted command to the display.
+  //  * @param format The printf-style command format, like "vis %s,0"
+  //  * @param ... The format arguments
+  //  * @return Whether the send was successful.
+  //  */
+  bool send_command_printf(const char *format, ...) override __attribute__((format(printf, 2, 3)));
 
   void set_wait_for_ack(bool wait_for_ack);
 
@@ -639,14 +651,14 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
    * @param char *string_buffer Buffer to put the text in
    * @return true if success, false for failure. Puts the components txt data into the string buffer
    */
-  bool get_string(const char *component_id, char *string_buffer);
+  bool get_string(const char *component_id, char *string_buffer) override;
   /**
    * will request the an integer of component id
    * from the nextion
    * @param const char *component_id Component id to get the text from
    * @return int of the components val
    */
-  int get_int(const char *component_id);
+  int get_int(const char *component_id) override;
 
   /** Add a callback to be notified of sleep state changes.
    *
@@ -669,6 +681,12 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
+
+#ifdef ARDUINO_ARCH_ESP8266
+  WiFiClient *wifi_client_{nullptr};
+  BearSSL::WiFiClientSecure *wifi_client_secure_{nullptr};
+  WiFiClient *get_wifi_client_();
+#endif
   /**
    * will request chunk_size chunks from the web server
    * and send each to the nextion
@@ -712,11 +730,11 @@ class Nextion : public PollingComponent, public uart::UARTDevice {
   int nextion_71_to_int_(String data);
   int nextion_71_to_int_(uint8_t *data[]);
 
-  std::vector<NextionComponent *> touch_;
-  std::vector<NextionComponent *> switchtype_;
-  std::vector<NextionComponent *> sensortype_;
-  std::vector<NextionComponent *> textsensortype_;
-  std::vector<NextionComponent *> binarysensor_;
+  std::vector<NextionBinarySensor *> touch_;
+  std::vector<NextionSwitch *> switchtype_;
+  std::vector<NextionSensor *> sensortype_;
+  std::vector<NextionTextSensor *> textsensortype_;
+  std::vector<NextionBinarySensor *> binarysensortype_;
   CallbackManager<void(bool)> sleep_callback_{};
   CallbackManager<void(bool)> wake_callback_{};
 
