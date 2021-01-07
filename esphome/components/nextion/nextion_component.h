@@ -35,11 +35,14 @@ class NextionComponent {
 
   void set_print_debug(bool print_debug) { this->print_debug_ = print_debug; }
 
+  void set_hass_name(std::string hass_name) { this->hass_name_ = hass_name; }
+
  protected:
   uint8_t page_id_;
   uint8_t component_id_;
   std::string variable_name_;
   std::string variable_name_to_send_;
+  std::string hass_name_;
   bool print_debug_ = true;
 };
 }  // namespace nextion

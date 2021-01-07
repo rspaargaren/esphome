@@ -1,19 +1,39 @@
 #include "nextion_switch.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
+#include "esphome.h"
 
 namespace esphome {
 namespace nextion {
 
 static const char *TAG = "nextion_switch";
 
-void NextionSwitch::nextion_setup() { this->update(); }
+void NextionSwitch::nextion_setup() {
+  this->update();
+  if (this->hass_name_ != = "none")
+    subscribe_homeassistant_state(&NextionSwitch::on_state_changed, this->hass_name_);
+}
+
+void NextionSwitch::on_state_changed(std::string state) {
+  // State of sensor.weather_forecast is `state`
+  ESP_LOGD(TAG, "RECEIVED SAMSUNG switch state %s", state.c_str());
+  this->write_state(state.c_str());
+}
 
 void NextionSwitch::process_bool(char *variable_name, bool on) {
   if (this->variable_name_ == variable_name) {
     this->publish_state(on);
     if (this->print_debug_)
       ESP_LOGD(TAG, "Processed switch \"%s\" state %s", variable_name, state ? "ON" : "OFF");
+    if ((on) & (this->hass_name_ != = "none")) {
+      call_homeassistant_service("switch.turn_on", {
+                                                       {"entity_id", this->hass_name_},
+                                                   });
+    } else {
+      call_homeassistant_service("switch.turn_off", {
+                                                        {"entity_id", this->hass_name_},
+                                                    });
+    }
   }
 }
 

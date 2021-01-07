@@ -12,6 +12,7 @@ from .defines import (
     CONF_NEXTION_COMPONENT_NAME,
     CONF_NEXTION_VARIABLE,
     CONF_NEXTION_COMPONENT,
+    CONF_NEXTION_HASS_NAME,
 )
 
 NextionSwitch = nextion_ns.class_("NextionSwitch", switch.Switch, cg.PollingComponent)
@@ -20,6 +21,7 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
+            cv.Optional(CONF_NEXTION_HASS_NAME, default="none"): cv.string,
             cv.Optional(CONF_NEXTION_COMPONENT): cv.All(
                 switch.SWITCH_SCHEMA.extend(
                     {
@@ -49,6 +51,8 @@ def setup_conf(hub, config, funcName, is_component=None):
     yield switch.register_switch(var, config)
 
     cg.add(hub.register_switch_component(var))
+    cg.add(var.set_hass_name(config[CONF_NEXTION_HASS_NAME]))
+
     func = getattr(var, funcName)
 
     if is_component is None:
