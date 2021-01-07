@@ -15,8 +15,8 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         text_sensor.TEXT_SENSOR_SCHEMA.extend(
             {
-                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.GenerateID(): cv.declare_id(NextionTextSensor),
+                cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.Required(CONF_NEXTION_COMPONENT_NAME): cv.string,
             }
         ).extend(cv.polling_component_schema("never")),

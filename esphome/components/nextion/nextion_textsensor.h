@@ -1,7 +1,8 @@
 #pragma once
 #include "esphome/core/component.h"
-#include "esphome/components/nextion/nextion.h"
 #include "esphome/components/text_sensor/text_sensor.h"
+#include "nextion_component.h"
+#include "nextion_base.h"
 
 namespace esphome {
 namespace nextion {
@@ -9,15 +10,13 @@ class NextionTextSensor;
 
 class NextionTextSensor : public NextionComponent, public text_sensor::TextSensor, public PollingComponent {
  public:
-  NextionTextSensor(Nextion *nextion) { this->nextion_ = nextion; }
-  void process_text(char *variable_name, char *text_value) override;
+  NextionTextSensor(NextionBase *nextion) { this->nextion_ = nextion; }
   void update_component() override { this->update(); }
   void update() override;
-  void set_state(std::string state);
   void nextion_setup() override;
 
- protected:
-  Nextion *nextion_;
+  void process_text(char *variable_name, char *text_value);
+  void set_state(std::string state);
 };
 }  // namespace nextion
 }  // namespace esphome
