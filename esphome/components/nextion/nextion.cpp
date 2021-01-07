@@ -158,6 +158,7 @@ void Nextion::set_component_font(const char *component, uint8_t font_id) {
   this->send_command_printf("%s.font=%d", component, font_id);
 }
 void Nextion::goto_page(const char *page) { this->send_command_printf("page %s", page); }
+
 bool Nextion::send_command_printf(const char *format, ...) {
   char buffer[256];
   va_list arg;
@@ -307,7 +308,7 @@ bool Nextion::read_until_ack_() {
         ESP_LOGD(TAG, "Got touch page=%u component=%u type=%s", page_id, component_id,
                  touch_event ? "PRESS" : "RELEASE");
         for (auto *touch : this->touch_) {
-          touch->process(page_id, component_id, touch_event == 0 ? false : true);
+          touch->process_touch(page_id, component_id, touch_event == 0 ? false : true);
         }
         break;
       }
@@ -636,9 +637,6 @@ int Nextion::get_int(const char *component_id) {
         value += 255 << (8 * i);
       }
     }
-
-    if (this->print_debug_)
-      ESP_LOGD(TAG, "Received get_int response (%d) for component id %s", value, component_id);
 
   } else if (response[0] == 0x02) {
     if (this->print_debug_)
