@@ -600,7 +600,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   // (In most use cases you won't need these)
   void register_touch_component(NextionBinarySensor *obj) { this->touch_.push_back(obj); }
   void register_switch_component(NextionSwitch *obj) { this->switchtype_.push_back(obj); }
-  void register_binarysensor_component(NextionBinarySensor *obj) { this->binarysensor_.push_back(obj); }
+  void register_binarysensor_component(NextionBinarySensor *obj) { this->binarysensortype_.push_back(obj); }
   void register_sensor_component(NextionSensor *obj) { this->sensortype_.push_back(obj); }
   void register_textsensor_component(NextionTextSensor *obj) { this->textsensortype_.push_back(obj); }
 
@@ -681,6 +681,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   bool ack_();
   bool read_until_ack_();
   bool is_updating_ = false;
+
 #ifdef ARDUINO_ARCH_ESP8266
   WiFiClient *wifi_client_{nullptr};
   WiFiClient *get_wifi_client_();
@@ -732,7 +733,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   std::vector<NextionSwitch *> switchtype_;
   std::vector<NextionSensor *> sensortype_;
   std::vector<NextionTextSensor *> textsensortype_;
-  std::vector<NextionBinarySensor *> binarysensor_;
+  std::vector<NextionBinarySensor *> binarysensortype_;
   CallbackManager<void(bool)> sleep_callback_{};
   CallbackManager<void(bool)> wake_callback_{};
 

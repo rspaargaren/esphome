@@ -7,7 +7,10 @@ namespace nextion {
 
 static const char *TAG = "nextion_sensor";
 
-void NextionSensor::nextion_setup() { this->update(); }
+void NextionSensor::nextion_setup() {
+  if (this->nextion_->is_setup_)
+    this->update();
+}
 
 void NextionSensor::process_sensor(char *variable_name, int state) {
   if (this->variable_name_ == variable_name) {

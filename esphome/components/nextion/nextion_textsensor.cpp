@@ -6,7 +6,10 @@ namespace esphome {
 namespace nextion {
 static const char *TAG = "nextion_textsensor";
 
-void NextionTextSensor::nextion_setup() { this->update(); }
+void NextionTextSensor::nextion_setup() {
+  if (this->nextion_->is_setup_)
+    this->update();
+}
 
 void NextionTextSensor::process_text(char *variable_name, char *text_value) {
   if (this->variable_name_ == variable_name) {

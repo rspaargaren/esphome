@@ -83,7 +83,7 @@ bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
 
     bool begin_status = false;
 #ifdef ARDUINO_ARCH_ESP32
-    begin_status = this->http.begin(this->tft_url_.c_str());
+    begin_status = http.begin(this->tft_url_.c_str());
 #endif
 #ifdef ARDUINO_ARCH_ESP8266
 #ifndef CLANG_TIDY

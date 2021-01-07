@@ -7,7 +7,10 @@ namespace nextion {
 
 static const char *TAG = "nextion_binarysensor";
 
-void NextionBinarySensor::nextion_setup() { this->update(); }
+void NextionBinarySensor::nextion_setup() {
+  if (this->nextion_->is_setup_)
+    this->update();
+}
 
 void NextionBinarySensor::process_bool(char *variable_name, bool on) {
   if (this->variable_name_ == variable_name) {
