@@ -684,6 +684,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
 
 #ifdef ARDUINO_ARCH_ESP8266
   WiFiClient *wifi_client_{nullptr};
+  BearSSL::WiFiClientSecure *wifi_client_secure_{nullptr};
   WiFiClient *get_wifi_client_();
 #endif
   /**
