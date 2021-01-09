@@ -201,7 +201,7 @@ mcp23s08:
   - id: 'mcp23s08_hub'
     cs_pin: GPIO12
     deviceaddress: 0
-    
+
 mcp23s17:
   - id: 'mcp23s17_hub'
     cs_pin: GPIO12
@@ -801,6 +801,10 @@ sensor:
     id: ph_ezo
     address: 99
     unit_of_measurement: 'pH'
+  - platform: nextion
+    id: testnumber
+    name: "testnumber"
+    nextion_variable_name: testnumber
 
 esp32_touch:
   setup_mode: False
@@ -1010,6 +1014,14 @@ binary_sensor:
         ]
   - platform: as3935
     name: 'Storm Alert'
+  - platform: nextion
+    page_id: 0
+    component_id: 8
+    id: "mode"
+  - platform: nextion
+    id: r0_sensor
+    name: "R0 Sensor"
+    nextion_component_name: page0.r0
 
 pca9685:
   frequency: 500
@@ -1597,6 +1609,10 @@ switch:
       # Use pin number 0
       number: 0
       inverted: False
+  - platform: nextion
+    id: r0
+    name: "R0 Switch"
+    nextion_component_name: page0.r0
 
 fan:
   - platform: binary
@@ -1763,6 +1779,15 @@ display:
     rowstart: 0
     lambda: |-
       it.rectangle(0, 0, it.get_width(), it.get_height());
+  - platform: nextion
+    tft_url: 'http://nextionfw.thebakkers.com/default35.tft'
+    update_interval: 5s
+    on_sleep:
+      then:
+        lambda: 'ESP_LOGD("display","Display went to sleep");'
+    on_wake:
+      then:
+        lambda: 'ESP_LOGD("display","Display woke up");'
 tm1651:
   id: tm1651_battery
   clk_pin: GPIO23
@@ -1908,7 +1933,11 @@ text_sensor:
   - platform: version
     name: 'ESPHome Version No Timestamp'
     hide_timestamp: True
-
+  - platform: nextion
+    name: text0
+    id: text0
+    update_interval: 4s
+    nextion_component_name: text0
 sn74hc595:
   - id: 'sn74hc595_hub'
     data_pin: GPIO21

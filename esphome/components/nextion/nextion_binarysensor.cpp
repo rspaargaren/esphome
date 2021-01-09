@@ -13,6 +13,8 @@ void NextionBinarySensor::nextion_setup() {
 }
 
 void NextionBinarySensor::process_bool(char *variable_name, bool on) {
+  if (this->variable_name_.empty())  // This is a touch component
+    return;
   if (this->variable_name_ == variable_name) {
     this->publish_state(on);
     if (this->print_debug_)
@@ -27,6 +29,8 @@ void NextionBinarySensor::process_touch(uint8_t page_id, uint8_t component_id, b
 }
 
 void NextionBinarySensor::update() {
+  if (this->variable_name_.empty())  // This is a touch component
+    return;
   uint32_t state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
   this->publish_state(state == 0 ? false : true);
   if (this->print_debug_)
@@ -34,6 +38,8 @@ void NextionBinarySensor::update() {
 }
 
 void NextionBinarySensor::set_state(bool state) {
+  if (this->variable_name_.empty())  // This is a touch component
+    return;
   this->publish_state(state);
   this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
   if (this->print_debug_)

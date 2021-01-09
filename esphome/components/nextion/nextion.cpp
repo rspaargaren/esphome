@@ -473,7 +473,7 @@ bool Nextion::read_until_ack_() {
       // 00 - NULL
       // 00/01 - Single byte for on/off
       // FF FF FF - End
-      case 0x94: {  // Binary Sensor component
+      case 0x93: {  // Binary Sensor component
         char variable_name[64];
         uint8_t variable_name_end = 0;
         uint8_t index = 0;
