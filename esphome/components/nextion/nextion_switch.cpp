@@ -18,7 +18,7 @@ void NextionSwitch::process_bool(char *variable_name, bool on) {
     this->publish_state(on);
     if (this->print_debug_)
       ESP_LOGD(TAG, "Processed switch \"%s\" state %s", variable_name, state ? "ON" : "OFF");
-    if ((on) & (this->hass_name_ != = "none")) {
+    if ((on) & (this->hass_name_ != "none")) {
       call_homeassistant_service("switch.turn_on", {
                                                        {"entity_id", this->hass_name_},
                                                    });

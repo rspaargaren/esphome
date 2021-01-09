@@ -9,6 +9,7 @@ from .display import Nextion
 from .defines import (
     CONF_NEXTION_VARIABLE_NAME,
     CONF_NEXTION_COMPONENT_NAME,
+    CONF_NEXTION_HASS_NAME,
 )
 
 NextionSwitch = nextion_ns.class_("NextionSwitch", switch.Switch, cg.PollingComponent)
@@ -21,6 +22,7 @@ CONFIG_SCHEMA = cv.All(
                 cv.GenerateID(CONF_NEXTION_ID): cv.use_id(Nextion),
                 cv.Optional(CONF_NEXTION_COMPONENT_NAME): cv.string,
                 cv.Optional(CONF_NEXTION_VARIABLE_NAME): cv.string,
+                cv.Optional(CONF_NEXTION_HASS_NAME, default="none"): cv.string,
             }
         ).extend(cv.polling_component_schema("never"))
     ),
@@ -45,3 +47,5 @@ def to_code(config):
                 config[CONF_NEXTION_COMPONENT_NAME] + ".val",
             )
         )
+
+    cg.add(var.set_hass_name(config[CONF_NEXTION_HASS_NAME]))
