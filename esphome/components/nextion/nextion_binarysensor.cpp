@@ -10,6 +10,18 @@ static const char *TAG = "nextion_binarysensor";
 void NextionBinarySensor::nextion_setup() {
   if (this->nextion_->is_setup_)
     this->update();
+  if (this->hass_name_ != "none")
+    subscribe_homeassistant_state(&NextionBinarySensor::on_state_changed, this->hass_name_);
+}
+
+void NextionBinarySensor::on_state_changed(std::string state) {
+  if (this->print_debug_)
+    ESP_LOGD(TAG, "Received switch state from Homeassistant: %s", state.c_str());
+  if (state == "on") {
+    this->set_state(true);
+  } else {
+    this->set_state(false);
+  }
 }
 
 void NextionBinarySensor::process_bool(char *variable_name, bool on) {
