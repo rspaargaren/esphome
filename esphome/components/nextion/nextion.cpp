@@ -492,9 +492,9 @@ bool Nextion::read_until_ack_() {
         }
         ++index;
 
-        ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
+        ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] != 0);
         for (auto *binarysensortype : this->binarysensortype_) {
-          binarysensortype->process_bool(&variable_name[0], data[index] == 0 ? false : true);
+          binarysensortype->process_bool(&variable_name[0], data[index] != 0);
         }
         break;
       }

@@ -13,7 +13,7 @@ void NextionTextSensor::nextion_setup() {
     subscribe_homeassistant_state(&NextionTextSensor::on_state_changed, this->hass_name_);
 }
 
-void NextionSensor::on_state_changed(std::string state) {
+void NextionTextSensor::on_state_changed(std::string state) {
   if (this->print_debug_)
     ESP_LOGD(TAG, "Received sensor state from Homeassistant: %s", state.c_str());
   this->set_state(state);
