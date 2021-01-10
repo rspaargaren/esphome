@@ -195,7 +195,7 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length, uint32_t 
     if (size) {
       if (dosend + size >= mysize) {
         if (this->print_debug_)
-          ESP_LOGD(TAG, "upload_from_stream_ write_array %d %d", dosend, size);
+          ESP_LOGD(TAG, "upload_from_stream_ write_array %d %zu", dosend, size);
         if (!this->upload_from_buffer_(transfer_buffer_, dosend)) {
           return false;
         }
