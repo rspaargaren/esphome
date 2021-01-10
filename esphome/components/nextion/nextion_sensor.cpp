@@ -1,7 +1,7 @@
 #include "nextion_sensor.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
-#include "esphome.h"
+//#include "esphome.h"
 
 namespace esphome {
 namespace nextion {
@@ -18,10 +18,10 @@ void NextionSensor::nextion_setup() {
 void NextionSensor::on_state_changed(std::string state) {
   if (this->print_debug_)
     ESP_LOGD(TAG, "Received sensor state from Homeassistant: %s", state.c_str());
-  this->set_state(String_to_int(state));
+  this->set_state(string_to_int(state));
 }
 
-int NextionSensor::String_to_int(std::string state) {
+int NextionSensor::string_to_int(std::string state) {
   int pos = state.find(".");
   if (pos != 0) {
     // auto strArr = state.Split('.');

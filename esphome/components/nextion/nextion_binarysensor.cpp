@@ -32,7 +32,7 @@ void NextionBinarySensor::update() {
   if (this->variable_name_.empty())  // This is a touch component
     return;
   uint32_t state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
-  this->publish_state(state == 0 ? false : true);
+  this->publish_state(state != 0);
   if (this->print_debug_)
     ESP_LOGD(TAG, "Updated binarysensor \"%s\" state %s", this->variable_name_.c_str(), state ? "ON" : "OFF");
 }

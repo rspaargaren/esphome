@@ -14,7 +14,7 @@ class NextionComponent {
   // Set the components variable name
   void set_variable_name(std::string variable_name, std::string variable_name_to_send = "") {
     variable_name_ = variable_name;
-    if (variable_name_to_send == "") {
+    if (variable_name_to_send.empty()) {
       variable_name_to_send_ = variable_name_;
     } else {
       variable_name_to_send_ = variable_name_to_send;
