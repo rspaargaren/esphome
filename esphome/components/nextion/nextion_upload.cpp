@@ -233,7 +233,7 @@ void Nextion::upload_tft() {
   // The http client "can" use up to this if we arent fast enough so its best
   // to leave room for both. We send 4096 bytes to the Nextion so get
   // x 4096 chunks
-  double chunk = ((ESP.getFreeHeap()) * .4) / 4096;  // 40% for the chunk and maybe the http buffer.
+  int chunk = int(((ESP.getFreeHeap()) * .4) / 4096);  // 40% for the chunk and maybe the http buffer.
   uint32_t chunk_size = chunk * 4096;
 
   ESP_LOGD(TAG, "Heap Size %d", ESP.getFreeHeap());
