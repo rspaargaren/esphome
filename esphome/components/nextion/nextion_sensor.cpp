@@ -22,16 +22,13 @@ void NextionSensor::on_state_changed(std::string state) {
 
 int NextionSensor::string_to_int(std::string state) {
   int pos = state.find('.');
-
   char *p_end;
-  long int num = std::strtol(state.c_str(), &p_end, 10);
-
   if (pos != 0) {
-    // auto strArr = state.Split('.');
-    // std::string temp = strArr[0] + strArr[1];
-
+    state.erase(std::remove(state.begin(), state.end(), '.'), state.end());
+    long int num = std::strtol(state.c_str(), &p_end, 10);
     return num;
   } else {
+    long int num = std::strtol(state.c_str(), &p_end, 10);
     return num;
   }
 }
