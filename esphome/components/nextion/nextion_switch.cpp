@@ -1,7 +1,6 @@
 #include "nextion_switch.h"
 #include "esphome/core/util.h"
 #include "esphome/core/log.h"
-//#include "esphome.h"
 
 namespace esphome {
 namespace nextion {
