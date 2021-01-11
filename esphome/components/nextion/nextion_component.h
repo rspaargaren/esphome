@@ -1,6 +1,10 @@
 #pragma once
 #include "Arduino.h"
+#include <map>
 #include "nextion_base.h"
+#ifdef USE_API
+#include "esphome/components/api/api_server.h"
+#endif
 namespace esphome {
 namespace nextion {
 class NextionComponent;
@@ -36,8 +40,59 @@ class NextionComponent {
     }
   }
 
+#ifdef USE_API
+  /** Call a Home Assistant service from ESPHome.
+   *
+   * Usage:
+   *
+   * ```cpp
+   * call_homeassistant_service("light.turn_on", {
+   *   {"entity_id", "light.my_light"},
+   *   {"brightness", "127"},
+   * });
+   * ```
+   *
+   * @param service_name The service to call.
+   * @param data The data for the service call, mapping from string to string.
+   */
+  void call_homeassistant_service(const std::string &service_name, const std::map<std::string, std::string> &data) {
+    api::HomeassistantServiceResponse resp;
+    resp.service = service_name;
+    for (auto &it : data) {
+      api::HomeassistantServiceMap kv;
+      kv.key = it.first;
+      kv.value = it.second;
+      resp.data.push_back(kv);
+    }
+    api::global_api_server->send_homeassistant_service_call(resp);
+  }
+  /** Subscribe to the state of an entity from Home Assistant.
+   *
+   * Usage:
+   *
+   * ```cpp
+   * void setup() override {
+   *   subscribe_homeassistant_state(&CustomNativeAPI::on_state_changed, "sensor.weather_forecast");
+   * }
+   *
+   * void on_state_changed(std::string state) {
+   *   // State of sensor.weather_forecast is `state`
+   * }
+   * ```
+   *
+   * @tparam T The class type creating the service, automatically deduced from the function pointer.
+   * @param callback The member function to call when the entity state changes.
+   * @param entity_id The entity_id to track.
+   */
+  template<typename T>
+  void subscribe_homeassistant_state(void (T::*callback)(std::string), const std::string &entity_id) {
+    auto f = std::bind(callback, (T *) this, std::placeholders::_1);
+    api::global_api_server->subscribe_home_assistant_state(entity_id, f);
+  }
+#endif
+
  protected:
-  NextionBase* nextion_;
+  NextionBase *nextion_;
 
   std::string variable_name_;
   std::string variable_name_to_send_;

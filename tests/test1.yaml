@@ -910,6 +910,7 @@ binary_sensor:
     page_id: 0
     component_id: 2
     name: 'Nextion Component 2 Touch'
+    hass_component_name: 'test.sensor'
   - platform: template
     name: 'Garage Door Open'
     id: garage_door

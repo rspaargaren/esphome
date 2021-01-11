@@ -10,8 +10,11 @@ static const char *TAG = "nextion_switch";
 void NextionSwitch::nextion_setup() {
   if (this->nextion_->is_setup_)
     this->update();
+
+#ifdef USE_API
   if (this->hass_name_ != "none")
     subscribe_homeassistant_state(&NextionSwitch::on_state_changed, this->hass_name_);
+#endif
 }
 
 void NextionSwitch::on_state_changed(std::string state) {
@@ -29,20 +32,23 @@ void NextionSwitch::process_bool(char *variable_name, bool on) {
     this->publish_state(on);
     if (this->print_debug_)
       ESP_LOGD(TAG, "Processed switch \"%s\" state %s", variable_name, state ? "ON" : "OFF");
-    if ((on) & (this->hass_name_ != "none")) {
+#ifdef USE_API
+    if (this->hass_name_ != "none") {
       ESP_LOGD(TAG, "hass service command %s ", this->hass_entity_type_.c_str());
-      call_homeassistant_service(this->hass_entity_type_ + ".turn_on", {
-                                                                           {"entity_id", this->hass_name_},
-                                                                       });
-      if (this->print_debug_)
-        ESP_LOGD(TAG, "Updated Homeassistant switch turn on");
-    } else if (this->hass_name_ != "none") {
-      call_homeassistant_service(this->hass_entity_type_ + ".turn_off", {
-                                                                            {"entity_id", this->hass_name_},
-                                                                        });
+      if (on) {
+        call_homeassistant_service(this->hass_entity_type_ + ".turn_on", {
+                                                                             {"entity_id", this->hass_name_},
+                                                                         });
+        if (this->print_debug_)
+          ESP_LOGD(TAG, "Updated Homeassistant switch turn on");
+      } else
+        call_homeassistant_service(this->hass_entity_type_ + ".turn_off", {
+                                                                              {"entity_id", this->hass_name_},
+                                                                          });
       if (this->print_debug_)
         ESP_LOGD(TAG, "Updated Homeassistant switch turn off");
     }
+#endif
   }
 }
 

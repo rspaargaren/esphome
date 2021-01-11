@@ -10,6 +10,8 @@ from .defines import (
     CONF_HASS_COMPONENT_NAME,
 )
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 NextionTextSensor = nextion_ns.class_(
     "NextionTextSensor", text_sensor.TextSensor, cg.PollingComponent
 )

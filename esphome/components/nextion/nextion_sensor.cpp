@@ -10,8 +10,10 @@ static const char *TAG = "nextion_sensor";
 void NextionSensor::nextion_setup() {
   if (this->nextion_->is_setup_)
     this->update();
+#ifdef USE_API
   if (this->hass_name_ != "none")
     subscribe_homeassistant_state(&NextionSensor::on_state_changed, this->hass_name_);
+#endif
 }
 
 void NextionSensor::on_state_changed(std::string state) {

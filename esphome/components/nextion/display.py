@@ -12,6 +12,8 @@ from esphome.const import (
 from . import Nextion, nextion_ns, nextion_ref
 from .defines import CONF_ON_SLEEP, CONF_ON_WAKE
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 DEPENDENCIES = ["uart", "network"]
 AUTO_LOAD = ["binary_sensor", "switch", "sensor", "text_sensor"]
 

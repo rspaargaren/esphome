@@ -10,6 +10,8 @@ from .defines import (
     CONF_HASS_COMPONENT_NAME,
 )
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 DEPENDENCIES = ["display"]
 
 
@@ -46,8 +48,8 @@ def to_code(config):
 
     if config.keys() >= {CONF_PAGE_ID, CONF_COMPONENT_ID}:
         if (
-            CONF_NEXTION_COMPONENT_NAME in config
-            or CONF_NEXTION_VARIABLE_NAME in config
+                CONF_NEXTION_COMPONENT_NAME in config
+                or CONF_NEXTION_VARIABLE_NAME in config
         ):
             raise cv.Invalid(
                 "For Nextion Touch Component only {CONF_PAGE_ID} "

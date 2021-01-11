@@ -11,6 +11,8 @@ from .defines import (
     CONF_HASS_COMPONENT_NAME,
 )
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 DEPENDENCIES = ["display"]
 
 NextionSensor = nextion_ns.class_("NextionSensor", sensor.Sensor, cg.PollingComponent)

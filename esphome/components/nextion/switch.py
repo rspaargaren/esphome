@@ -12,6 +12,8 @@ from .defines import (
     CONF_HASS_COMPONENT_NAME,
 )
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 NextionSwitch = nextion_ns.class_("NextionSwitch", switch.Switch, cg.PollingComponent)
 
 CONFIG_SCHEMA = cv.All(

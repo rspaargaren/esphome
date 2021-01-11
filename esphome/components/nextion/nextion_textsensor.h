@@ -1,7 +1,6 @@
 #pragma once
 #include "esphome/core/component.h"
 #include "esphome/components/text_sensor/text_sensor.h"
-#include "esphome/components/api/custom_api_device.h"
 #include "nextion_component.h"
 #include "nextion_base.h"
 
@@ -11,8 +10,7 @@ class NextionTextSensor;
 
 class NextionTextSensor : public NextionComponent,
                           public text_sensor::TextSensor,
-                          public PollingComponent,
-                          api::CustomAPIDevice {
+                          public PollingComponent {
  public:
   NextionTextSensor(NextionBase *nextion) { this->nextion_ = nextion; }
   void update_component() override { this->update(); }
