@@ -166,7 +166,7 @@ bool Nextion::upload_by_chunks_(int content_length, uint32_t chunk_size) {
   return true;
 }
 
-bool Nextion::upload_from_stream(Stream &my_file, int content_length, uint32_t chunk_size) {
+bool Nextion::upload_from_stream_(Stream &my_file, int content_length, uint32_t chunk_size) {
 #if defined ESP8266
   yield();
 #endif
