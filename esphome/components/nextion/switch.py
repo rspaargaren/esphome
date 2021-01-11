@@ -50,4 +50,5 @@ def to_code(config):
             )
         )
 
-    cg.add(var.set_hass_name(config[CONF_HASS_COMPONENT_NAME]))
+    if CONF_HASS_COMPONENT_NAME in config:
+        cg.add(var.set_hass_name(config[CONF_HASS_COMPONENT_NAME]))

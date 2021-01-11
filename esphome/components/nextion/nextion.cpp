@@ -97,6 +97,9 @@ bool Nextion::ack_() {
 }
 
 void Nextion::update_all_components() {
+  for (auto *binarysensortype : this->binarysensortype_) {
+    binarysensortype->update_component();
+  }
   for (auto *sensortype : this->sensortype_) {
     sensortype->update_component();
   }
@@ -337,6 +340,7 @@ bool Nextion::read_until_ack_() {
       case 0x87:  // device automatically wakes up
       {
         this->wake_callback_.call(true);
+        this->all_components_send_state();
         break;
       }
       case 0x88:  // system successful start up
@@ -530,6 +534,21 @@ void Nextion::set_nextion_rtc_time(time::ESPTime time) {
   this->send_command_printf("rtc5=%u", time.second);
 }
 #endif
+
+void Nextion::all_components_send_state() {
+  for (auto *binarysensortype : this->binarysensortype_) {
+    binarysensortype->set_state(binarysensortype->state);
+  }
+  for (auto *sensortype : this->sensortype_) {
+    sensortype->set_state(sensortype->state);
+  }
+  for (auto *switchtype : this->switchtype_) {
+    switchtype->set_state(switchtype->state);
+  }
+  for (auto *textsensortype : this->textsensortype_) {
+    textsensortype->set_state(textsensortype->state);
+  }
+}
 
 //  0x70 0x61 0x62 0x31 0x32 0x33 0xFF 0xFF 0xFF
 //  Returned when using get command for a string.

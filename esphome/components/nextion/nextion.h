@@ -675,6 +675,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   void set_print_debug(bool print_debug);
 
   void update_all_components();
+  void all_components_send_state();
 
  protected:
   bool print_debug_ = true;
