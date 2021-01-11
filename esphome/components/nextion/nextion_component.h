@@ -1,5 +1,5 @@
 #pragma once
-#include "Arduino.h"
+#include "esphome/core/defines.h"
 #include <map>
 #include "nextion_base.h"
 #ifdef USE_API
