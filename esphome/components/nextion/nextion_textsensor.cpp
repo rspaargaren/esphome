@@ -9,6 +9,14 @@ static const char *TAG = "nextion_textsensor";
 void NextionTextSensor::nextion_setup() {
   if (this->nextion_->is_setup_)
     this->update();
+  if (this->hass_name_ != "none")
+    subscribe_homeassistant_state(&NextionTextSensor::on_state_changed, this->hass_name_);
+}
+
+void NextionTextSensor::on_state_changed(std::string state) {
+  if (this->print_debug_)
+    ESP_LOGD(TAG, "Received sensor state from Homeassistant: %s", state.c_str());
+  this->set_state(state);
 }
 
 void NextionTextSensor::process_text(char *variable_name, char *text_value) {

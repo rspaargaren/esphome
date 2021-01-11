@@ -195,7 +195,7 @@ bool Nextion::upload_from_stream_(Stream &my_file, int content_length, uint32_t 
     if (size) {
       if (dosend + size >= mysize) {
         if (this->print_debug_)
-          ESP_LOGD(TAG, "upload_from_stream_ write_array %d %d", dosend, size);
+          ESP_LOGD(TAG, "upload_from_stream_ write_array %d %zu", dosend, size);
         if (!this->upload_from_buffer_(transfer_buffer_, dosend)) {
           return false;
         }
@@ -233,7 +233,7 @@ void Nextion::upload_tft() {
   // The http client "can" use up to this if we arent fast enough so its best
   // to leave room for both. We send 4096 bytes to the Nextion so get
   // x 4096 chunks
-  int chunk = ((ESP.getFreeHeap()) * .4) / 4096;  // 40% for the chunk and maybe the http buffer.
+  int chunk = int(((ESP.getFreeHeap()) * .4) / 4096);  // 40% for the chunk and maybe the http buffer.
   uint32_t chunk_size = chunk * 4096;
 
   ESP_LOGD(TAG, "Heap Size %d", ESP.getFreeHeap());

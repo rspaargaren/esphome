@@ -7,6 +7,7 @@ from .display import Nextion
 from .defines import (
     CONF_NEXTION_VARIABLE_NAME,
     CONF_NEXTION_COMPONENT_NAME,
+    CONF_HASS_COMPONENT_NAME,
 )
 
 DEPENDENCIES = ["display"]
@@ -25,6 +26,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_COMPONENT_ID): cv.uint8_t,
             cv.Optional(CONF_NEXTION_COMPONENT_NAME): cv.string,
             cv.Optional(CONF_NEXTION_VARIABLE_NAME): cv.string,
+            cv.Optional(CONF_HASS_COMPONENT_NAME, default="none"): cv.string,
         }
     ).extend(cv.polling_component_schema("never")),
     cv.has_at_least_one_key(
@@ -44,8 +46,8 @@ def to_code(config):
 
     if config.keys() >= {CONF_PAGE_ID, CONF_COMPONENT_ID}:
         if (
-                CONF_NEXTION_COMPONENT_NAME in config
-                or CONF_NEXTION_VARIABLE_NAME in config
+            CONF_NEXTION_COMPONENT_NAME in config
+            or CONF_NEXTION_VARIABLE_NAME in config
         ):
             raise cv.Invalid(
                 "For Nextion Touch Component only {CONF_PAGE_ID} "
@@ -73,3 +75,5 @@ def to_code(config):
                 config[CONF_NEXTION_COMPONENT_NAME] + ".val",
             )
         )
+
+    cg.add(var.set_hass_name(config[CONF_HASS_COMPONENT_NAME]))

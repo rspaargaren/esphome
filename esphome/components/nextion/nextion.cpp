@@ -311,7 +311,7 @@ bool Nextion::read_until_ack_() {
         ESP_LOGD(TAG, "Got touch page=%u component=%u type=%s", page_id, component_id,
                  touch_event ? "PRESS" : "RELEASE");
         for (auto *touch : this->touch_) {
-          touch->process_touch(page_id, component_id, touch_event == 0 ? false : true);
+          touch->process_touch(page_id, component_id, touch_event != 0);
         }
         break;
       }
@@ -366,9 +366,9 @@ bool Nextion::read_until_ack_() {
         }
         ++index;
 
-        ESP_LOGD(TAG, "Got Switch variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
+        ESP_LOGD(TAG, "Got Switch variable_name=%s value=%d", variable_name, data[index] != 0);
         for (auto *switchtype : this->switchtype_) {
-          switchtype->process_bool(&variable_name[0], data[index] == 0 ? false : true);
+          switchtype->process_bool(&variable_name[0], data[index] != 0);
         }
         break;
       }
@@ -492,9 +492,9 @@ bool Nextion::read_until_ack_() {
         }
         ++index;
 
-        ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] == 0 ? false : true);
+        ESP_LOGD(TAG, "Got Binary Sensor variable_name=%s value=%d", variable_name, data[index] != 0);
         for (auto *binarysensortype : this->binarysensortype_) {
-          binarysensortype->process_bool(&variable_name[0], data[index] == 0 ? false : true);
+          binarysensortype->process_bool(&variable_name[0], data[index] != 0);
         }
         break;
       }
