@@ -10,6 +10,8 @@ from .defines import (
     CONF_HASS_COMPONENT_NAME,
 )
 
+CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
+
 DEPENDENCIES = ["display"]
 
 

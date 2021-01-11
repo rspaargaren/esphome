@@ -1,7 +1,6 @@
 #pragma once
 #include "esphome/core/component.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
-#include "esphome/components/api/custom_api_device.h"
 #include "nextion_component.h"
 #include "nextion_base.h"
 
@@ -11,8 +10,7 @@ class NextionBinarySensor;
 
 class NextionBinarySensor : public NextionComponent,
                             public binary_sensor::BinarySensorInitiallyOff,
-                            public PollingComponent,
-                            api::CustomAPIDevice {
+                            public PollingComponent {
  public:
   NextionBinarySensor(NextionBase *nextion) { this->nextion_ = nextion; }
   void update() override;

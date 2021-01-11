@@ -910,6 +910,7 @@ binary_sensor:
     page_id: 0
     component_id: 2
     name: 'Nextion Component 2 Touch'
+    hass_component_name: 'test.sensor'
   - platform: template
     name: 'Garage Door Open'
     id: garage_door
@@ -1731,8 +1732,35 @@ display:
     reset_pin: GPIO23
     lambda: |-
       it.rectangle(0, 0, it.get_width(), it.get_height());
+  - platform: ssd1322_spi
+    model: "SSD1322 256x64"
+    cs_pin: GPIO23
+    dc_pin: GPIO23
+    reset_pin: GPIO23
+    lambda: |-
+      it.rectangle(0, 0, it.get_width(), it.get_height());
   - platform: ssd1325_spi
     model: 'SSD1325 128x64'
+    cs_pin: GPIO23
+    dc_pin: GPIO23
+    reset_pin: GPIO23
+    lambda: |-
+      it.rectangle(0, 0, it.get_width(), it.get_height());
+  - platform: ssd1327_i2c
+    model: 'SSD1327 128X128'
+    reset_pin: GPIO23
+    address: 0x3D
+    id: display1327
+    brightness: 60%
+    pages:
+      - id: page13271
+        lambda: |-
+          it.rectangle(0, 0, it.get_width(), it.get_height());
+      - id: page13272
+        lambda: |-
+          // Nothing
+  - platform: ssd1327_spi
+    model: 'SSD1327 128x128'
     cs_pin: GPIO23
     dc_pin: GPIO23
     reset_pin: GPIO23
@@ -1835,6 +1863,20 @@ time:
       then:
         - lambda: 'ESP_LOGD("main", "time");'
   - platform: gps
+    on_time:
+      seconds: 0
+      minutes: /15
+      then:
+        ds1307.write:
+          id: ds1307_time
+  - platform: ds1307
+    id: ds1307_time
+    on_time:
+      seconds: 0
+      then:
+          ds1307.read
+
+
 
 cover:
   - platform: template

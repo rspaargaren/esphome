@@ -1,7 +1,6 @@
 #pragma once
 #include "esphome/core/component.h"
 #include "esphome/components/switch/switch.h"
-#include "esphome/components/api/custom_api_device.h"
 #include "nextion_component.h"
 #include "nextion_base.h"
 
@@ -9,7 +8,7 @@ namespace esphome {
 namespace nextion {
 class NextionSwitch;
 
-class NextionSwitch : public NextionComponent, public switch_::Switch, public PollingComponent, api::CustomAPIDevice {
+class NextionSwitch : public NextionComponent, public switch_::Switch, public PollingComponent {
  public:
   NextionSwitch(NextionBase *nextion) { this->nextion_ = nextion; }
   void update_component() override { this->update(); }
