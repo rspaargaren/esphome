@@ -15,7 +15,6 @@ class NextionSensor : public NextionComponent, public sensor::Sensor, public Pol
   void update() override;
   void nextion_setup() override;
   void on_state_changed(std::string state);
-  int string_to_int(std::string state);
 
   void set_precision(uint8_t precision) { this->precision_ = precision; }
 

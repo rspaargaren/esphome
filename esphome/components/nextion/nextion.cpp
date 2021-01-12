@@ -704,7 +704,7 @@ int Nextion::get_int(const char *component_id) {
 
   data_length = this->recv_ret_data_(response);
 
-  if (response[0] == 119) {
+  if (response[0] == 113) {
     uint8_t num_byte_index = 0;
 
     int dataindex = 0;
