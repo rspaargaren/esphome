@@ -676,6 +676,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
 
   void update_all_components();
   void all_components_send_state();
+  uint8_t get_current_page();
 
  protected:
   bool print_debug_ = true;
@@ -715,7 +716,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
    */
   bool upload_from_buffer_(const uint8_t *file_buf, size_t buf_size);
   /*
-   * Receive string data.
+   * Receive data.
    *
    * @param response - save string data.
    * @param timeout - set timeout time.
@@ -724,7 +725,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
    * @return the length of string buffer.
    *
    */
-  uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
+  uint16_t recv_ret_data_(uint8_t *response, uint32_t timeout = 500, bool recv_flag = false);
 
   void upload_end_();
 

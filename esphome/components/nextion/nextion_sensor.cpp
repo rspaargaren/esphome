@@ -19,28 +19,13 @@ void NextionSensor::nextion_setup() {
 void NextionSensor::on_state_changed(std::string state) {
   if (this->print_debug_)
     ESP_LOGD(TAG, "Received sensor state from Homeassistant: %s", state.c_str());
-  this->set_state(string_to_int(state));
-}
 
-int NextionSensor::string_to_int(std::string state) {
-  int pos = state.find('.');
-  // char *p_end;
-  if (pos != 0) {
-    auto state_value = parse_float(state);
-    if (!state_value.has_value()) {
-      ESP_LOGW(TAG, "Can't convert '%s' to number!", state.c_str());
-      return 0;
-    }
-    double to_multiply = pow(10, this->precision_);
-    return (int) (*state_value * to_multiply);
-  } else {
-    char *p_end;
-    long int num = std::strtol(state.c_str(), &p_end, 10);
-    if (p_end == nullptr || p_end != state.end().base()) {
-      ESP_LOGW(TAG, "Can't convert '%s' to number!", state.c_str());
-    }
-    return num;
+  auto state_value = parse_float(state);
+  if (!state_value.has_value()) {
+    ESP_LOGW(TAG, "Can't convert '%s' to number!", state.c_str());
+    return;
   }
+  this->set_state(*state_value);
 }
 
 void NextionSensor::process_sensor(char *variable_name, int state) {
@@ -60,11 +45,17 @@ void NextionSensor::update() {
     ESP_LOGD(TAG, "Updated sensor \"%s\" state %d", this->variable_name_.c_str(), state);
 }
 
-void NextionSensor::set_state(int state) {
-  this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
+void NextionSensor::set_state(float state) {
+  if (this->precision_ > 0) {
+    double to_multiply = pow(10, this->precision_);
+    int state_value = (int) (state * to_multiply);
+    this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), (int) state_value);
+  } else {
+    this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
+  }
   this->publish_state(state);
   if (this->print_debug_)
-    ESP_LOGD(TAG, "Wrote state for sensor \"%s\" state %d", this->variable_name_.c_str(), state);
+    ESP_LOGD(TAG, "Wrote state for sensor \"%s\" state %lf", this->variable_name_.c_str(), state);
 }
 
 }  // namespace nextion

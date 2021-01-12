@@ -8,16 +8,25 @@ namespace nextion {
 static const char *TAG = "nextion";
 
 void Nextion::setup() {
-  String response = String("");
+  uint8_t connectbuffer[128] = {0x00};
   this->send_command_no_ack("");
   this->send_command_no_ack("connect");
-  this->recv_ret_string_(response);
-  if (response.indexOf(F("comok")) == -1) {
-    ESP_LOGD(TAG, "display doesn't accept the first connect request");
-  } else {
-    sscanf(response.c_str(), "%*64[^,],%*64[^,],%64[^,],%64[^,],%*64[^,],%64[^,],%64[^,]", device_model_,
-           firmware_version_, serial_number_, flash_size_);
+
+  int data_length = this->recv_ret_data_(connectbuffer);
+
+  if (data_length > 0) {
+    connectbuffer[data_length] = 0x00;
+
+    String response = String((char *) connectbuffer);
+
+    if (response.indexOf(F("comok")) == -1) {
+      ESP_LOGD(TAG, "display doesn't accept the first connect request, is off or is sleeping");
+    } else {
+      sscanf(response.c_str(), "%*64[^,],%*64[^,],%64[^,],%64[^,],%*64[^,],%64[^,],%64[^,]", device_model_,
+             firmware_version_, serial_number_, flash_size_);
+    }
   }
+
   this->send_command_printf("bkcmd=3");
   this->set_backlight_brightness(static_cast<uint8_t>(brightness_ * 100));
   this->goto_page("0");
@@ -556,24 +565,35 @@ void Nextion::all_components_send_state() {
 //  data: ab123
 bool Nextion::get_string(const char *component_id, char *string_buffer) {
   char command[64];
+  uint8_t response[64];
+  uint8_t data_length = 0;
+
   sprintf(command, "get %s", component_id);
-  String response = "";
   this->send_command_no_ack(command);
-  this->recv_ret_string_(response);
+
+  data_length = this->recv_ret_data_(response);
 
   if (response[0] == 0x70) {
-    response.remove(0, 1);
-    strcpy(string_buffer, response.c_str());
+    for (int i = 0; i <= data_length; ++i) {
+      string_buffer[i] = response[i + 1];
+    }
+    string_buffer[data_length - 1] = 0x00;
+
     if (this->print_debug_)
       ESP_LOGD(TAG, "Received get_string response \"%s\" for component id %s", string_buffer, component_id);
     return true;
   } else {
-    ESP_LOGD(TAG, "Received unknown get_string response \"%s\" for component id %s", response.c_str(), component_id);
+    ESP_LOGD(TAG, "Received unknown get_string response \"%s\" for component id %s", response, component_id);
   }
   return false;
 }
 
-uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv_flag) {
+uint8_t Nextion::get_current_page() {
+  uint8_t current_page = this->get_int("dp");
+  return current_page;
+}
+
+uint16_t Nextion::recv_ret_data_(uint8_t *response, uint32_t timeout, bool recv_flag) {
 #if defined ESP8266
   yield();
 #endif
@@ -588,13 +608,10 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
     ESP_LOGD(TAG, "timeout serial read: %d", timeout);
 
   start = millis();
-
+  int data_length = 0;
   while (millis() - start <= timeout) {
     while (this->available()) {
       this->read_byte(&c);
-      if (c == 0) {
-        continue;
-      }
 
       if (c == 0xFF)
         nr_of_ff_bytes++;
@@ -606,10 +623,10 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
       if (nr_of_ff_bytes >= 3)
         ff_flag = true;
 
-      response += (char) c;
+      response[data_length++] = c;
 
       if (recv_flag) {
-        if (response.indexOf(0x05) != -1) {
+        if (c == 0x05) {
           exit_flag = true;
         }
       }
@@ -620,10 +637,9 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
   }
 
   if (ff_flag)
-    response = response.substring(0, response.length() - 3);  // Remove last 3 0xFF
+    data_length -= 3;
 
-  ret = response.length();
-  return ret;
+  return data_length;
 }
 
 //  0x71 0x01 0x02 0x03 0x04 0xFF 0xFF 0xFF
@@ -633,22 +649,21 @@ uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv
 //  data: 67305985
 int Nextion::get_int(const char *component_id) {
   char command[64];
-  String response = "";
+  uint8_t response[64];
   int value = 0;
+  int data_length = 0;
 
   sprintf(command, "get %s", component_id);
   this->send_command_no_ack(command);
 
-  this->recv_ret_string_(response);
+  data_length = this->recv_ret_data_(response);
 
   if (response[0] == 0x71) {
-    response.remove(0, 1);
-
     uint8_t num_byte_index = 0;
 
     int dataindex = 0;
-    for (int i = 0; i < response.length(); ++i) {
-      value += response[i] << (8 * i);
+    for (int i = 1; i < data_length; ++i) {
+      value += response[i] << (8 * dataindex);
       ++dataindex;
     }
 
@@ -666,7 +681,7 @@ int Nextion::get_int(const char *component_id) {
   } else {
     if (this->print_debug_)
       ESP_LOGD(TAG, "Received unknown get_int response, length: \"%d\"  first_value: \"%d\" for component id %s",
-               response.length(), response.c_str()[0], component_id);
+               data_length, response[0], component_id);
   }
   return value;
 }
