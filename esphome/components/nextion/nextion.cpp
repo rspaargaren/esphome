@@ -694,7 +694,7 @@ uint16_t Nextion::recv_ret_data_(uint8_t *response, uint32_t timeout, bool recv_
 //  (0x01+0x02*256+0x03*65536+0x04*16777216)
 //  data: 67305985
 int Nextion::get_int(const char *component_id) {
-  char command[64];
+  char command[64] = {0x00};
   uint8_t response[64];
   int value = 0;
   int data_length = 0;
