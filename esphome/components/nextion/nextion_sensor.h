@@ -15,10 +15,14 @@ class NextionSensor : public NextionComponent, public sensor::Sensor, public Pol
   void update() override;
   void nextion_setup() override;
   void on_state_changed(std::string state);
-  int string_to_int(std::string state);
+
+  void set_precision(uint8_t precision) { this->precision_ = precision; }
 
   void process_sensor(char *variable_name, int state);
-  void set_state(int state);
+  void set_state(float state);
+
+ protected:
+  uint8_t precision_ = 0;
 };
 }  // namespace nextion
 }  // namespace esphome

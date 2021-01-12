@@ -9,6 +9,7 @@ from .defines import (
     CONF_NEXTION_VARIABLE_NAME,
     CONF_NEXTION_COMPONENT_NAME,
     CONF_HASS_COMPONENT_NAME,
+    CONF_NEXTION_PRECISION,
 )
 
 CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
@@ -27,6 +28,8 @@ CONFIG_SCHEMA = cv.All(
                 cv.Optional(CONF_NEXTION_COMPONENT_NAME): cv.string,
                 cv.Optional(CONF_NEXTION_VARIABLE_NAME): cv.string,
                 cv.Optional(CONF_HASS_COMPONENT_NAME, default="none"): cv.string,
+                cv.Optional(CONF_HASS_COMPONENT_NAME, default="none"): cv.string,
+                cv.Optional(CONF_NEXTION_PRECISION, default=0): cv.uint8_t,
             }
         )
         .extend(cv.polling_component_schema("never"))
@@ -54,4 +57,8 @@ def to_code(config):
             )
         )
 
-    cg.add(var.set_hass_name(config[CONF_HASS_COMPONENT_NAME]))
+    if CONF_HASS_COMPONENT_NAME in config:
+        cg.add(var.set_hass_name(config[CONF_HASS_COMPONENT_NAME]))
+
+    if CONF_NEXTION_PRECISION in config:
+        cg.add(var.set_precision(config[CONF_NEXTION_PRECISION]))

@@ -64,7 +64,7 @@ void NextionSwitch::set_state(bool state) { this->write_state(state); }
 void NextionSwitch::write_state(bool state) {
   ESP_LOGD(TAG, "Updated switch %d", state);
   this->publish_state(state);
-  this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
+  this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), (int) state);
   if (this->print_debug_)
     ESP_LOGD(TAG, "Updated switch \"%s\" state %s", this->variable_name_.c_str(), state ? "ON" : "OFF");
 }

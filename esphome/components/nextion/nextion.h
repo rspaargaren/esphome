@@ -675,6 +675,8 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   void set_print_debug(bool print_debug);
 
   void update_all_components();
+  void all_components_send_state();
+  uint8_t get_current_page();
 
  protected:
   bool print_debug_ = true;
@@ -724,6 +726,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
    *
    */
   uint16_t recv_ret_string_(String &response, uint32_t timeout = 500, bool recv_flag = false);
+  uint16_t recv_ret_data_(uint8_t *response, uint32_t timeout = 500, bool recv_flag = false);
 
   void upload_end_();
 
