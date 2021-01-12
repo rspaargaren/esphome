@@ -51,7 +51,7 @@ void NextionSensor::set_state(float state) {
     int state_value = (int) (state * to_multiply);
     this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), (int) state_value);
   } else {
-    this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), state);
+    this->nextion_->send_command_printf("%s=%d", this->variable_name_to_send_.c_str(), (int) state);
   }
   this->publish_state(state);
   if (this->print_debug_)
