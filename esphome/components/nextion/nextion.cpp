@@ -8,23 +8,16 @@ namespace nextion {
 static const char *TAG = "nextion";
 
 void Nextion::setup() {
-  uint8_t connectbuffer[128] = {0x00};
+  String response = String("");
   this->send_command_no_ack("");
   this->send_command_no_ack("connect");
 
-  int data_length = this->recv_ret_data_(connectbuffer);
-
-  if (data_length > 0) {
-    connectbuffer[data_length] = 0x00;
-
-    String response = String((char *) connectbuffer);
-
-    if (response.indexOf(F("comok")) == -1) {
-      ESP_LOGD(TAG, "display doesn't accept the first connect request, is off or is sleeping");
-    } else {
-      sscanf(response.c_str(), "%*64[^,],%*64[^,],%64[^,],%64[^,],%*64[^,],%64[^,],%64[^,]", device_model_,
-             firmware_version_, serial_number_, flash_size_);
-    }
+  this->recv_ret_string_(response);
+  if (response.indexOf(F("comok")) == -1) {
+    ESP_LOGD(TAG, "display doesn't accept the first connect request");
+  } else {
+    sscanf(response.c_str(), "%*64[^,],%*64[^,],%64[^,],%64[^,],%*64[^,],%64[^,],%64[^,]", device_model_,
+           firmware_version_, serial_number_, flash_size_);
   }
 
   this->send_command_printf("bkcmd=3");
@@ -591,6 +584,59 @@ bool Nextion::get_string(const char *component_id, char *string_buffer) {
 uint8_t Nextion::get_current_page() {
   uint8_t current_page = this->get_int("dp");
   return current_page;
+}
+
+uint16_t Nextion::recv_ret_string_(String &response, uint32_t timeout, bool recv_flag) {
+#if defined ESP8266
+  yield();
+#endif
+
+  uint16_t ret = 0;
+  uint8_t c = 0;
+  uint8_t nr_of_ff_bytes = 0;
+  long start;
+  bool exit_flag = false;
+  bool ff_flag = false;
+  if (timeout != 500)
+    ESP_LOGD(TAG, "timeout serial read: %d", timeout);
+
+  start = millis();
+
+  while (millis() - start <= timeout) {
+    while (this->available()) {
+      this->read_byte(&c);
+      if (c == 0) {
+        continue;
+      }
+
+      if (c == 0xFF)
+        nr_of_ff_bytes++;
+      else {
+        nr_of_ff_bytes = 0;
+        ff_flag = false;
+      }
+
+      if (nr_of_ff_bytes >= 3)
+        ff_flag = true;
+
+      response += (char) c;
+
+      if (recv_flag) {
+        if (response.indexOf(0x05) != -1) {
+          exit_flag = true;
+        }
+      }
+    }
+    if (exit_flag || ff_flag) {
+      break;
+    }
+  }
+
+  if (ff_flag)
+    response = response.substring(0, response.length() - 3);  // Remove last 3 0xFF
+
+  ret = response.length();
+  return ret;
 }
 
 uint16_t Nextion::recv_ret_data_(uint8_t *response, uint32_t timeout, bool recv_flag) {
