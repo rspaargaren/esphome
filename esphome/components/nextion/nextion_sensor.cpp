@@ -31,9 +31,9 @@ int NextionSensor::string_to_int(std::string state) {
       ESP_LOGW(TAG, "Can't convert '%s' to number!", state.c_str());
       return 0;
     }
-    int to_multiply = pow(10, this->precision_);
+    double to_multiply = pow(10, this->precision_);
     ESP_LOGD(TAG, "state_value %lf to_multiply %d", *state_value, to_multiply);
-    return *state_value * to_multiply;
+    return (int) (*state_value * to_multiply);
   } else {
     char *p_end;
     long int num = std::strtol(state.c_str(), &p_end, 10);
