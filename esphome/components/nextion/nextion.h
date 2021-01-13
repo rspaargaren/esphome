@@ -362,6 +362,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
    * @param value The value to write.
    */
   void add_waveform_data(int component_id, uint8_t channel_number, uint8_t value);
+  void open_waveform_channel(int component_id, uint8_t channel_number, uint8_t value);
   /**
    * Display a picture at coordinates.
    * @param picture_id The picture id.

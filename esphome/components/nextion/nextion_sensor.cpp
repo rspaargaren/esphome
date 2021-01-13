@@ -26,6 +26,7 @@ void NextionSensor::on_state_changed(std::string state) {
     return;
   }
   this->set_state(*state_value);
+  wave_buffer_.push_back(*state_value);
 }
 
 void NextionSensor::process_sensor(char *variable_name, int state) {
@@ -43,6 +44,18 @@ void NextionSensor::update() {
   this->publish_state(state);
   if (this->print_debug_)
     ESP_LOGD(TAG, "Updated sensor \"%s\" state %d", this->variable_name_.c_str(), state);
+  wavetest();
+}
+
+void NextionSensor::wavetest() {
+  bool ready_to_send;
+  ready_to_send = this->nextion_->send_command_printf("addt %d,%u,%u", 10, 1, this->wave_buffer_.size());
+  if (ready_to_send) {
+    for (int i = 0; i < this->wave_buffer_.size(); i++) {
+      this->write_byte(this->wave_buffer_[i]);
+    }
+    wave_buffer_.clear();
+  }
 }
 
 void NextionSensor::set_state(float state) {

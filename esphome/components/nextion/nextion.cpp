@@ -187,6 +187,9 @@ void Nextion::disable_component_touch(const char *component) { this->send_comman
 void Nextion::add_waveform_data(int component_id, uint8_t channel_number, uint8_t value) {
   this->send_command_printf("add %d,%u,%u", component_id, channel_number, value);
 }
+void Nextion::open_waveform_channel(int component_id, uint8_t channel_number, uint8_t value) {
+  this->send_command_printf("addt %d,%u,%u", component_id, channel_number, value);
+}
 void Nextion::fill_area(int x1, int y1, int width, int height, const char *color) {
   this->send_command_printf("fill %d,%d,%d,%d,%s", x1, y1, width, height, color);
 }
