@@ -38,20 +38,27 @@ void NextionSensor::process_sensor(char *variable_name, int state) {
   if (this->variable_name_ == variable_name) {
     if (this->print_debug_)
       ESP_LOGD(TAG, "NextionSensor process_sensor %s", variable_name);
-    this->publish_state(state);
+    if (this->wave_comp_id_ == 0) {
+      this->publish_state(state);
+    } else {
+      wave_buffer_.push_back(state);
+    }
     if (this->print_debug_)
       ESP_LOGD(TAG, "Processed sensor \"%s\" state %d", variable_name, state);
   }
 }
 
 void NextionSensor::update() {
-  int state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
-  this->publish_state(state);
-  if (this->print_debug_)
-    ESP_LOGD(TAG, "Updated sensor \"%s\" state %d", this->variable_name_.c_str(), state);
-  if (this->wave_buffer_.size() != 0) {
-    wave_update();
-  };
+  if (this->wave_comp_id_ == 0) {
+    int state = this->nextion_->get_int(this->variable_name_to_send_.c_str());
+    this->publish_state(state);
+    if (this->print_debug_)
+      ESP_LOGD(TAG, "Updated sensor \"%s\" state %d", this->variable_name_.c_str(), state);
+  } else {
+    if (this->wave_buffer_.size() != 0) {
+      wave_update();
+    }
+  }
 }
 
 void NextionSensor::wave_update() {
