@@ -180,6 +180,10 @@ bool Nextion::send_command_printf(const char *format, ...) {
   this->send_command_no_ack(buffer);
   return this->ack_();
 }
+
+void Nextion::send_byte(uint8_t buffer) { this->write_byte(buffer); }
+void Nextion::send_array(const uint8_t *data, size_t length) { this->write_array(data, length); }
+
 void Nextion::hide_component(const char *component) { this->send_command_printf("vis %s,0", component); }
 void Nextion::show_component(const char *component) { this->send_command_printf("vis %s,1", component); }
 void Nextion::enable_component_touch(const char *component) { this->send_command_printf("tsw %s,1", component); }
@@ -507,9 +511,16 @@ bool Nextion::read_until_ack_() {
         }
         break;
       }
-      case 0xFD:  // data transparent transmit finished
-      case 0xFE:  // data transparent transmit ready
+      case 0xFD: {  // data transparent transmit finished
+        ESP_LOGW(TAG, "Nextion reported data transmit finished!");
+        this->datatransmit_ready_ = false;
         break;
+      }
+      case 0xFE: {  // data transparent transmit ready
+        ESP_LOGW(TAG, "Nextion reported ready for transmit!");
+        this->datatransmit_ready_ = true;
+        break;
+      }
       default:
         ESP_LOGW(TAG, "Received unknown event from nextion: 0x%02X", event);
         break;

@@ -10,6 +10,8 @@ from .defines import (
     CONF_NEXTION_COMPONENT_NAME,
     CONF_HASS_COMPONENT_NAME,
     CONF_NEXTION_PRECISION,
+    CONF_WAVE_COMPONENT_ID,
+    CONF_WAVE_CHANNEL_ID,
 )
 
 CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
@@ -30,6 +32,8 @@ CONFIG_SCHEMA = cv.All(
                 cv.Optional(CONF_HASS_COMPONENT_NAME, default="none"): cv.string,
                 cv.Optional(CONF_HASS_COMPONENT_NAME, default="none"): cv.string,
                 cv.Optional(CONF_NEXTION_PRECISION, default=0): cv.uint8_t,
+                cv.Optional(CONF_WAVE_CHANNEL_ID, default=0): cv.uint8_t,
+                cv.Optional(CONF_WAVE_COMPONENT_ID, default=0): cv.uint8_t,
             }
         )
         .extend(cv.polling_component_schema("never"))
@@ -62,3 +66,9 @@ def to_code(config):
 
     if CONF_NEXTION_PRECISION in config:
         cg.add(var.set_precision(config[CONF_NEXTION_PRECISION]))
+
+    if CONF_WAVE_COMPONENT_ID in config:
+        cg.add(var.set_wave_component_id(config[CONF_WAVE_COMPONENT_ID]))
+
+    if CONF_WAVE_CHANNEL_ID in config:
+        cg.add(var.set_wave_channel_id(config[CONF_WAVE_CHANNEL_ID]))

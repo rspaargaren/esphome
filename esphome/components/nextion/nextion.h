@@ -626,6 +626,9 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
   //  */
   bool send_command_printf(const char *format, ...) override __attribute__((format(printf, 2, 3)));
 
+  void send_byte(uint8_t buffer);
+  void send_array(const uint8_t *data, size_t length);
+
   void set_wait_for_ack(bool wait_for_ack);
 
   /**
@@ -744,6 +747,7 @@ class Nextion : public NextionBase, public PollingComponent, public uart::UARTDe
 
   optional<nextion_writer_t> writer_;
   bool wait_for_ack_{true};
+  bool wait_for_datatransmit_{true};
   float brightness_{1.0};
   std::string tft_url_;
   int total_ = 0;
