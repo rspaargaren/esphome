@@ -20,6 +20,7 @@ class NextionSensor : public NextionComponent, public sensor::Sensor, public Pol
   void set_precision(uint8_t precision) { this->precision_ = precision; }
   void set_wave_component_id(uint8_t wave_comp_id) { this->wave_comp_id_ = wave_comp_id; }
   void set_wave_channel_id(uint8_t wave_chan_id) { this->wave_chan_id_ = wave_chan_id; }
+  void set_wave_mode(uint8_t wave_mode) { this->wave_mode_ = wave_mode; }
   void wave_update();
   bool wait_for_data_ready_();
   void process_sensor(char *variable_name, int state);
@@ -29,7 +30,9 @@ class NextionSensor : public NextionComponent, public sensor::Sensor, public Pol
   uint8_t precision_ = 0;
   uint8_t wave_comp_id_ = 0;
   uint8_t wave_chan_id_ = 0;
+  uint8_t wave_mode_ = 0;
   std::vector<uint8_t> wave_buffer_;
+  std::vector<uint8_t> wave_que_;
 };
 }  // namespace nextion
 }  // namespace esphome

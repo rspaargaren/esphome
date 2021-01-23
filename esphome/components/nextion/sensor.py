@@ -12,7 +12,14 @@ from .defines import (
     CONF_NEXTION_PRECISION,
     CONF_WAVE_COMPONENT_ID,
     CONF_WAVE_CHANNEL_ID,
+    CONF_WAVE_MODE,
 )
+
+WAVE_MODES = {
+    "OFF": 0,
+    "STATE": 1,
+    "TIME": 2,
+}
 
 CODEOWNERS = ["@senexcrenshaw", "@rspaargaren"]
 
@@ -34,6 +41,9 @@ CONFIG_SCHEMA = cv.All(
                 cv.Optional(CONF_NEXTION_PRECISION, default=0): cv.uint8_t,
                 cv.Optional(CONF_WAVE_CHANNEL_ID, default=0): cv.uint8_t,
                 cv.Optional(CONF_WAVE_COMPONENT_ID, default=0): cv.uint8_t,
+                cv.Optional(CONF_WAVE_MODE, default="OFF"): cv.enum(
+                    WAVE_MODES, upper=True
+                ),
             }
         )
         .extend(cv.polling_component_schema("never"))
@@ -72,3 +82,6 @@ def to_code(config):
 
     if CONF_WAVE_CHANNEL_ID in config:
         cg.add(var.set_wave_channel_id(config[CONF_WAVE_CHANNEL_ID]))
+
+    if CONF_WAVE_MODE in config:
+        cg.add(var.set_wave_mode(config[CONF_WAVE_MODE]))
