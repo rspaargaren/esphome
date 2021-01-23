@@ -4,7 +4,7 @@
 using namespace esphome;
 
 #define P1_MAXTELEGRAMLENGTH 1500
-#define DELAY_MS 60000  // Delay in miliseconds before reading another telegram
+#define DELAY_MS 60000  // Delay in miliseconds before re ading another telegram
 #define WAIT_FOR_DATA_MS 2000
 
 // Use data structure according to: https://github.com/matthijskooijman/arduino-dsmr
