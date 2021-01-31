@@ -2,7 +2,8 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/uart/uart.h"
-#include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/dsmr/dsmr_sensor.h"
+
 #include "dsmr.h"
 
 namespace esphome {
@@ -71,8 +72,10 @@ class EspDsmr : public PollingComponent, public uart::UARTDevice {
   void update() override;
   float get_setup_priority() const override;
   void dump_config() override;
+  void register_sensor_component(DsmrSensor *obj) { this->sensortype_.push_back(obj); }
 
  protected:
+  std::vector<DsmrSensor *> sensortype_;
   bool header_found_;
   bool footer_found_;
   uint16_t telegramlen_;

@@ -7,6 +7,21 @@ namespace espdsmr {
 
 static const char *TAG = "dsmr";
 
+struct printer {
+  template<typename Item> void apply(Item &i) {
+    if (i.present()) {
+      for (auto *sensortype : this->sensortype_) {
+        sensortype->update_component();
+      }
+      // Serial.print(Item::name);
+      // Serial.print(F(": "));
+      // Serial.print(i.val());
+      // Serial.print(Item::unit());
+      // Serial.println();
+    }
+  }
+};
+
 void EspDsmr::setup() {
   pinMode(5, OUTPUT);    // Set D5 as output pin
   digitalWrite(5, LOW);  // Set low, don't request message from P1 port
@@ -49,6 +64,7 @@ void EspDsmr::loop() {
             // Parsing error, show it
             // Serial.println(res.fullError(telegram, telegram + telegramlen));
           } else {
+            data.applyEach(printer());
             // publish_sensors(data);
             // return true;  // break out function
           }
