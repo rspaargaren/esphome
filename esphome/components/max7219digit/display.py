@@ -43,7 +43,7 @@ MAX7219Component = max7219_ns.class_(
 MAX7219ComponentRef = MAX7219Component.operator("ref")
 
 CONFIG_SCHEMA = (
-    display.BASIC_DISPLAY_SCHEMA.extend(
+    display.FULL_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(MAX7219Component),
             cv.Optional(CONF_NUM_CHIPS, default=4): cv.int_range(min=1, max=255),
@@ -71,7 +71,7 @@ CONFIG_SCHEMA = (
     )
     .extend(cv.polling_component_schema("500ms"))
     .extend(spi.spi_device_schema(cs_pin_required=True)),
-    cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA)
+    cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA),
 )
 
 
