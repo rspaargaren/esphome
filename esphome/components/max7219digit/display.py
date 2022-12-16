@@ -71,7 +71,7 @@ CONFIG_SCHEMA = (
     )
     .extend(cv.polling_component_schema("500ms"))
     .extend(spi.spi_device_schema(cs_pin_required=True)),
-    cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA),
+    cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA)
 )
 
 
