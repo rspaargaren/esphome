@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import display, spi
-from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA, CONF_NUM_CHIPS
+from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA, CONF_NUM_CHIPS, CONF_PAGES
 
 CODEOWNERS = ["@rspaargaren"]
 DEPENDENCIES = ["spi"]
@@ -71,6 +71,7 @@ CONFIG_SCHEMA = (
     )
     .extend(cv.polling_component_schema("500ms"))
     .extend(spi.spi_device_schema(cs_pin_required=True))
+    cv.has_at_most_one_key(CONF_PAGES, CONF_LAMBDA)
 )
 
 
