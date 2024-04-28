@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
 from esphome.automation import Condition, maybe_simple_id
-from esphome.components import mqtt
+from esphome.components import mqtt, lora
 from esphome.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -67,6 +67,7 @@ validate_device_class = cv.one_of(*DEVICE_CLASSES, lower=True)
 _SWITCH_SCHEMA = cv.ENTITY_BASE_SCHEMA.extend(cv.MQTT_COMMAND_COMPONENT_SCHEMA).extend(
     {
         cv.OnlyWith(CONF_MQTT_ID, "mqtt"): cv.declare_id(mqtt.MQTTSwitchComponent),
+        cv.Optional(CONF_ICON): icon,
         cv.Optional(CONF_INVERTED): cv.boolean,
         cv.Optional(CONF_ON_TURN_ON): automation.validate_automation(
             {
@@ -151,13 +152,9 @@ async def setup_switch_core_(var, config):
         mqtt_ = cg.new_Pvariable(mqtt_id, var)
         await mqtt.register_mqtt_component(mqtt_, config)
 
-    if (device_class := config.get(CONF_DEVICE_CLASS)) is not None:
-        cg.add(var.set_device_class(device_class))
 
-    cg.add(var.set_restore_mode(config[CONF_RESTORE_MODE]))
-
-
-async def register_switch(var, config):
+@coroutine
+def register_switch(var, config):
     if not CORE.has_id(config[CONF_ID]):
         var = cg.Pvariable(config[CONF_ID], var)
     cg.add(cg.App.register_switch(var))

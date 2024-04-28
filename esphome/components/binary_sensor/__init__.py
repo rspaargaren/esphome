@@ -4,7 +4,7 @@ from esphome.cpp_generator import MockObjClass
 from esphome.cpp_helpers import setup_entity
 from esphome import automation, core
 from esphome.automation import Condition, maybe_simple_id
-from esphome.components import mqtt
+from esphome.components import mqtt, lora
 from esphome.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
@@ -391,8 +391,7 @@ BINARY_SENSOR_SCHEMA = cv.ENTITY_BASE_SCHEMA.extend(cv.MQTT_COMPONENT_SCHEMA).ex
         cv.OnlyWith(CONF_MQTT_ID, "mqtt"): cv.declare_id(
             mqtt.MQTTBinarySensorComponent
         ),
-        cv.Optional(CONF_PUBLISH_INITIAL_STATE): cv.boolean,
-        cv.Optional(CONF_DEVICE_CLASS): validate_device_class,
+        cv.Optional(CONF_DEVICE_CLASS): device_class,
         cv.Optional(CONF_FILTERS): validate_filters,
         cv.Optional(CONF_ON_PRESS): automation.validate_automation(
             {
@@ -535,6 +534,9 @@ async def setup_binary_sensor_core_(var, config):
     if mqtt_id := config.get(CONF_MQTT_ID):
         mqtt_ = cg.new_Pvariable(mqtt_id, var)
         await mqtt.register_mqtt_component(mqtt_, config)
+
+    if lora.CONF_LORA_ID in config:
+        yield lora.register_lora_component(var, config, 2)
 
 
 async def register_binary_sensor(var, config):

@@ -3,7 +3,7 @@ import math
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
-from esphome.components import mqtt
+from esphome.components import mqtt, lora
 from esphome.const import (
     CONF_DEVICE_CLASS,
     CONF_ABOVE,
@@ -255,6 +255,10 @@ validate_device_class = cv.one_of(*DEVICE_CLASSES, lower=True, space="_")
 SENSOR_SCHEMA = cv.ENTITY_BASE_SCHEMA.extend(cv.MQTT_COMPONENT_SCHEMA).extend(
     {
         cv.OnlyWith(CONF_MQTT_ID, "mqtt"): cv.declare_id(mqtt.MQTTSensorComponent),
+        cv.OnlyWith(lora.CONF_LORA_ID, "lora"): cv.use_id(lora.LoraComponent),
+        cv.OnlyWith(lora.CONF_SEND_TO_LORA, "lora", default=False): cv.boolean,
+        cv.OnlyWith(lora.CONF_RECEIVE_FROM_LORA, "lora", default=False): cv.boolean,
+        cv.OnlyWith(lora.CONF_LORA_NAME, "lora", default=""): cv.valid_name,
         cv.GenerateID(): cv.declare_id(Sensor),
         cv.Optional(CONF_UNIT_OF_MEASUREMENT): validate_unit_of_measurement,
         cv.Optional(CONF_ACCURACY_DECIMALS): validate_accuracy_decimals,
@@ -762,9 +766,9 @@ async def setup_sensor_core_(var, config):
             cg.add(trigger.set_max(template_))
         await automation.build_automation(trigger, [(float, "x")], conf)
 
-    if (mqtt_id := config.get(CONF_MQTT_ID)) is not None:
-        mqtt_ = cg.new_Pvariable(mqtt_id, var)
-        await mqtt.register_mqtt_component(mqtt_, config)
+    if CONF_MQTT_ID in config:
+        mqtt_ = cg.new_Pvariable(config[CONF_MQTT_ID], var)
+        yield mqtt.register_mqtt_component(mqtt_, config)
 
         if (expire_after := config.get(CONF_EXPIRE_AFTER, _UNDEF)) is not _UNDEF:
             if expire_after is None:

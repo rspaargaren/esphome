@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import codecs
 import collections
 import fnmatch
@@ -628,7 +627,6 @@ def lint_trailing_whitespace(fname, match):
         "esphome/components/event/event.h",
         "esphome/components/fan/fan.h",
         "esphome/components/i2c/i2c.h",
-        "esphome/components/lock/lock.h",
         "esphome/components/mqtt/mqtt_component.h",
         "esphome/components/number/number.h",
         "esphome/components/text/text.h",

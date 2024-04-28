@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation
-from esphome.components import mqtt
+from esphome.components import mqtt, lora
 from esphome.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -127,9 +127,7 @@ validate_device_class = cv.one_of(*DEVICE_CLASSES, lower=True, space="_")
 TEXT_SENSOR_SCHEMA = cv.ENTITY_BASE_SCHEMA.extend(cv.MQTT_COMPONENT_SCHEMA).extend(
     {
         cv.OnlyWith(CONF_MQTT_ID, "mqtt"): cv.declare_id(mqtt.MQTTTextSensor),
-        cv.GenerateID(): cv.declare_id(TextSensor),
-        cv.Optional(CONF_DEVICE_CLASS): validate_device_class,
-        cv.Optional(CONF_FILTERS): validate_filters,
+        cv.Optional(CONF_ICON): icon,
         cv.Optional(CONF_ON_VALUE): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TextSensorStateTrigger),
@@ -204,6 +202,9 @@ async def setup_text_sensor_core_(var, config):
     if (mqtt_id := config.get(CONF_MQTT_ID)) is not None:
         mqtt_ = cg.new_Pvariable(mqtt_id, var)
         await mqtt.register_mqtt_component(mqtt_, config)
+
+    if lora.CONF_LORA_ID in config:
+        yield lora.register_lora_component(var, config, 3)
 
 
 async def register_text_sensor(var, config):
