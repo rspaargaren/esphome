@@ -63,7 +63,7 @@ jobs:
       - name: Build
         run: python setup.py sdist bdist_wheel
       - name: Publish
-        uses: pypa/gh-action-pypi-publish@v1.8.14
+        uses: pypa/gh-action-pypi-publish@v1.9.0
 
   deploy-docker:
     name: Build ESPHome ${{ matrix.platform }}
